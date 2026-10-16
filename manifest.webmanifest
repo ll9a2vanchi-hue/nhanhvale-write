@@ -1,0 +1,15 @@
+{
+  "name": "NHANHVALE WRITE",
+  "short_name": "WRITE",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#f8fafc",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
