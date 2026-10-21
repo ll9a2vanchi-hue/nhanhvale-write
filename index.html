@@ -476,7 +476,7 @@ for(const local of localReviewMap.values()){
  }else if(remote.deleted||reviewEventTimestamp(remote)>reviewEventTimestamp(local)){localReviewMap.set(remote.id,{...remote})}
 }
 for(const remote of cloudReviews||[])if(!localReviewMap.has(remote.id))localReviewMap.set(remote.id,{...remote});
-if(reviewOut.length){const {error:reviewUpError}=await c.from('write_review_events').upsert(reviewOut,{onConflict:'id'});if(reviewUpError)throw reviewUpError}
+if(reviewOut.length){const {error:reviewUpError}=await c.from('write_review_events').upsert(reviewOut,{onConflict:'id'});if(reviewUpError)throw reviewUpError;const {data:verifiedReviews,error:reviewVerifyError}=await c.from('write_review_events').select('id').eq('user_id',user.id).in('id',reviewOut.map(e=>e.id));if(reviewVerifyError)throw reviewVerifyError;const verifiedIds=new Set((verifiedReviews||[]).map(e=>e.id));if(reviewOut.some(e=>!verifiedIds.has(e.id)))throw Error('Cloud chưa xác nhận đủ nhật ký ôn tập; dữ liệu trên máy vẫn được giữ lại')}
 const mergedReviewHistory=[...localReviewMap.values()];
 const priorReviewHistory=reviewHistory;
 reviewHistory=mergedReviewHistory;
