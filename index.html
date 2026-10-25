@@ -1,4 +1,4 @@
-<!doctype html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f8fafc"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><title>NHANHVALE WRITE v6.9.8</title><style>
+<!doctype html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#f8fafc"><link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png" type="image/png"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><title>NHANHVALE WRITE v6.9.9</title><style>
 :root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#17212f;background:#f6f8fb}*{box-sizing:border-box}body{margin:0}button,input,textarea,select{font:inherit}button{cursor:pointer}header{position:sticky;top:0;background:#ffffffed;backdrop-filter:blur(12px);z-index:3;border-bottom:1px solid #e8edf3}.wrap{max-width:850px;margin:auto;padding:16px}header .wrap{display:flex;justify-content:space-between;align-items:center}.brand{font-size:19px;font-weight:850;letter-spacing:-.6px}.muted{color:#718096;font-size:12px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.card{background:white;border:1px solid #e7ebf1;border-radius:16px;padding:15px;margin-bottom:12px;box-shadow:0 2px 8px #1d2b4110}.metric b{display:block;font-size:22px;margin:4px 0}.metric{min-width:0}.metric small{color:#728096}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}.btn{border:0;border-radius:11px;background:#17212f;color:white;padding:11px 14px;font-weight:650}.btn.secondary{background:#eef2f6;color:#273447}.btn.outline{background:white;border:1px solid #d9e0e8;color:#334155}.btn:active,.chip:active{transform:scale(.98)}input,textarea,select{border:1px solid #dfe5ed;border-radius:11px;padding:11px;background:white;color:#17212f;min-width:0}input:focus,textarea:focus{outline:2px solid #b8cbe3}textarea{width:100%;min-height:260px;resize:vertical;line-height:1.7}.grow{flex:1}.tabs{display:flex;gap:5px;overflow:auto;padding:5px;background:#e9edf3;border-radius:14px;margin:14px 0}.tabs button{border:0;background:transparent;color:#526174;padding:10px;border-radius:10px;white-space:nowrap;flex:1;font-weight:650}.tabs button.active{background:white;color:#17212f;box-shadow:0 1px 4px #0001}.chip{display:inline-flex;align-items:center;border-radius:100px;padding:6px 10px;border:1px solid #e2e8f0;background:#f1f5f9;color:#46566c;font-size:12px;font-weight:650}.chip.green{background:#e4f7eb;color:#147a46;border-color:#c4ead2}.chip.red{background:#fee8e7;color:#b83e3c;border-color:#f9d0cf}.chip.amber{background:#fff1d6;color:#98620a;border-color:#f6dfad}.topic{cursor:pointer}.topic h3{font-size:15px;margin:0 0 10px}.title{font-weight:800;font-size:17px;margin:3px 0 12px}.hidden{display:none!important}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions>*{flex:1}.editor-title{width:100%;font-weight:800;font-size:21px;border:0;padding:5px 0}.editor-title:focus{outline:0;border-bottom:1px solid #a9bdd6}.badge{padding:12px;border-radius:13px;background:#f1f5f9;text-align:center}.badge b{display:block;font-size:15px}.badge span{font-size:24px}.badge small{display:block;color:#64748b}.badge.locked{opacity:.45}.two{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.bar{height:9px;background:#e9eef5;border-radius:10px;overflow:hidden}.bar>div{height:100%;background:#263d59}.hint{font-size:12px;color:#718096;line-height:1.6}.space{height:24px}@media(max-width:520px){.wrap{padding:12px}.card{padding:13px}.metric b{font-size:19px}.btn{padding:10px}.grid{gap:6px}.metric{padding:11px 8px}}
 </style>
 <style>
@@ -435,6 +435,16 @@ on('#backgroundToggle','click',()=>showPanel(paperPanel));
 // Android Chrome may resize both window.innerHeight and visualViewport.
 if(window.nvDockCleanup)window.nvDockCleanup();
 let dockFrame=0,caretFrame=0,focusTimers=[],isComposing=false;
+// In writing mode both html and body have overflow:auto, so <body> (not the
+// window) is the real scroll container. Scroll the nearest scrollable
+// ancestor of the editor first and only fall back to the window.
+const scrollCaretBy=delta=>{
+ for(let el=rich.parentElement;el&&el!==document.documentElement&&Math.abs(delta)>1;el=el.parentElement){
+  if(!/(auto|scroll|overlay)/.test(getComputedStyle(el).overflowY)||el.scrollHeight<=el.clientHeight+1)continue;
+  const before=el.scrollTop;el.scrollTop=before+delta;delta-=el.scrollTop-before;
+ }
+ if(Math.abs(delta)>1)window.scrollBy({top:delta,behavior:'instant'});
+};
 const keepCaretVisible=()=>{
  if(caretFrame)return;
  caretFrame=requestAnimationFrame(()=>{
@@ -465,7 +475,7 @@ const keepCaretVisible=()=>{
   const lower=Math.min(top+(vv?.height||innerHeight),dock.top)-16;
   if(lower<=upper)return;
   const delta=rect.bottom>lower?rect.bottom-lower:rect.top<upper?rect.top-upper:0;
-  if(Math.abs(delta)>1)window.scrollBy({top:delta,behavior:'instant'});
+  if(Math.abs(delta)>1)scrollCaretBy(delta);
  });
 };
 const updateFormatDock=()=>{
