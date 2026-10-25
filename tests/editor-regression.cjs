@@ -35,3 +35,23 @@ ctx2.custom.offsetHeight=54;vm.createContext(ctx2);vm.runInContext(src.slice(a,b
 assert.equal(body.scrollTop,82,'caret correction must scroll the body scroll container');assert.deepEqual(scrolls2,[],'window must not be scrolled when body absorbs the delta');}
 assert(src.includes("closest('[contenteditable],textarea,input')"));assert(src.includes("NodeFilter.FILTER_REJECT:NodeFilter.FILTER_SKIP"));
 console.log('PASS: deferred serialization, IME composition, idle save, dirty-only flush, immediate navigation flush, cancelled timers, caret/dock correction (82px, body scroller), editor observer exclusion');
+// v6.10.0 — storage slimming keeps data and derives the sync/backup field.
+{const a=src.indexOf('function nvSlimTopic(');const b=src.indexOf("const KEY='nv-write-v1'",a);const m={};vm.createContext(m);vm.runInContext(src.slice(a,b)+';this.slim=nvSlimTopic;this.full=nvFullTopic;',m);
+const same={id:'a',content:'x',richHtml:'<b>x</b>',contentHtml:'<b>x</b>',content_html:'<b>x</b>'};m.slim(same);
+assert.deepEqual(Object.keys(same).sort(),['content','id','richHtml'],'identical copies are dropped');assert.equal(m.full(same).contentHtml,'<b>x</b>','sync/backup still gets contentHtml');assert.equal(same.contentHtml,undefined,'full() must not mutate the stored record');
+const diff={id:'b',richHtml:'<i>r</i>',contentHtml:'<i>c</i>'};m.slim(diff);assert.equal(diff.contentHtml,'<i>c</i>','differing legacy copy is never dropped');assert.equal(m.full(diff).contentHtml,'<i>c</i>');
+const noRich={id:'c',contentHtml:'<b>only</b>'};m.slim(noRich);assert.equal(noRich.contentHtml,'<b>only</b>','record without richHtml is untouched');
+const plain={id:'d',content:'p'};assert.deepEqual(m.slim(plain),{id:'d',content:'p'});assert.equal(m.full(plain).contentHtml,undefined);}
+// Saves and sync use the slim/full helpers; sync is no longer skipped when local storage is full.
+assert(src.includes('db.topics.forEach(nvSlimTopic);localStorage.setItem(KEY'),'save() slims before writing');
+assert(src.includes('(nvFullTopic(local)))'),'sync payload derives content_html');
+assert(src.includes('async function sync(){if(syncing||!navigator.onLine)return;'),'sync must still run when storage is full');
+assert(!src.includes('contentHtml:html}'),'editor must not write a duplicate HTML copy');
+// Sanitizer parses in an inert document and sanitizes children of unwrapped tags.
+assert(src.includes("const safeRich=html=>{const box=new DOMParser().parseFromString("),'safeRich must use an inert DOMParser document');
+assert(src.includes('if(!allowed.has(child.tagName)){walk(child);child.replaceWith'),'unwrapped tags must have their children sanitized');
+// Quick add re-renders so new topics and counters appear without reload.
+{const q=src.slice(src.indexOf("on('#add','click'"),src.indexOf("on('#quickPriority'"));assert(/render\(\)/.test(q),'quick add must call render()')}
+// Memoized word count returns the same results as the plain counter.
+{const a=src.indexOf('count=(()=>');const c={};vm.createContext(c);vm.runInContext('this.count='+src.slice(a+6,src.indexOf('})();',a)+5),c);for(const s of ['', '  a  b ','Tiếng Việt có dấu','x\ny\tz',null,undefined,'Tiếng Việt có dấu'])assert.equal(c.count(s),(String(s||'').trim().match(/\S+/gu)||[]).length)}
+console.log('PASS: v6.10.0 storage slimming/migration, sync when storage full, inert sanitizer, quick-add render, memoized count');
