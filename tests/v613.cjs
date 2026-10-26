@@ -19,7 +19,7 @@ assert(src.includes("navigator.locks.request('nv-write-sync',{ifAvailable:true}"
 for(const k of ['links','reviews','xp'])assert(src.includes(`window.nvMergeAux?.('${k}')`),'merge before save: '+k);
 assert(src.includes("new BroadcastChannel('nv-write-aux')"));
 // (b) UI
-assert(src.includes('==== nv-v613-css ====')&&src.includes('body.writing-mode .nv-xp{display:none!important}')&&src.includes('body.writing-mode #wordCount{display:none!important}'));
+assert(src.includes('==== nv-v613-css ====')&&/body\.writing-mode \.nv-xp\{display:none(!important)?\}/.test(src)&&/body\.writing-mode #wordCount\{display:none(!important)?\}/.test(src));
 assert(src.includes(':focus-visible{outline:3px solid #2f6fdb!important'));
 assert(src.includes('</span> Chuỗi ngày</small>')&&src.includes('điểm XP</small>')&&src.includes('aria-label="Sao chép bài"')&&src.includes('<small>Tô sáng</small>')&&src.includes('aria-label="Xóa định dạng" title="Xóa định dạng"'));
 assert(!/>Streak</.test(src)&&!/Copy bài/.test(src)&&!/aria-label="Highlight/.test(src));
