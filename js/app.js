@@ -69,7 +69,7 @@ function editor(t){return `<div class="write-screen">
 <div class="write-menu-heading">Ôn tập và quản lý</div><div class="nv-review-actions"><p id="nvReviewFeedback" class="nv-review-feedback" role="status" aria-live="polite" hidden></p><span class="hint">Đánh giá mức độ nhớ (chạm một lần để ghi nhận):</span><div class="nv-review-grade-row"><button class="btn secondary" data-review-grade="again" type="button">↻ Chưa nhớ</button><button class="btn secondary" data-review-grade="hard" type="button">◐ Nhớ một phần</button><button class="btn" data-review-grade="good" type="button">✓ Nhớ tốt</button></div><div class="row"><button class="btn outline" id="undoReview" type="button" ${reviewEntries(t.id).length?'':'disabled'}>↶ Hoàn tác lần ôn</button></div><p class="hint">Đã ôn ${t.review_count||0} lần · Lần gần nhất: ${t.last_reviewed?new Date(t.last_reviewed).toLocaleDateString('vi-VN'):'Chưa ôn'}</p><details><summary>Nhật ký bài viết (${reviewEntries(t.id).length})</summary>${reviewJournal(t.id)}</details></div>
 <div class="nv-danger-zone"><div class="write-menu-heading">Xóa bài</div><p class="hint">Bài sẽ vào Thùng rác và có thể khôi phục bất cứ lúc nào.</p><button class="btn outline nv-danger-btn" id="delete" type="button">🗑 Chuyển vào thùng rác</button></div>
 </div></details></div>
-<div class="write-customization" id="writeCustomization"><div id="formatPanel"><button type="button" class="format-button" data-cmd="bold" aria-label="In đậm"><b>B</b></button><button type="button" class="format-button" data-cmd="italic" aria-label="In nghiêng"><i>I</i></button><button type="button" class="format-button" data-cmd="removeFormat" aria-label="Xóa định dạng" title="Xóa định dạng">Xóa định dạng</button><button type="button" class="format-button" data-cmd="undo" aria-label="Hoàn tác">↶</button><button type="button" class="format-button" data-cmd="redo" aria-label="Làm lại">↷</button><button type="button" class="format-button nv-color-toggle" aria-expanded="false" aria-label="Màu chữ và tô sáng" title="Màu chữ và tô sáng"><span aria-hidden="true">🎨</span> Màu</button><div class="format-colors"><small>Màu chữ</small>${['#293447','#b84545','#2870a5','#278060','#8456a9'].map(c=>`<button type="button" class="color-dot" data-ink="${c}" style="--swatch:${c}" aria-label="Màu chữ ${c}" title="Màu chữ"></button>`).join('')}</div><div class="format-colors"><small>Tô sáng</small>${['#fff1a9','#c9f2d6','#cde7ff','#f6d6e5'].map(c=>`<button type="button" class="color-dot" data-mark="${c}" style="--swatch:${c}" aria-label="Tô sáng ${c}" title="Tô sáng"></button>`).join('')}<button type="button" class="color-dot no-mark" data-mark="transparent" title="Bỏ tô sáng" aria-label="Bỏ tô sáng">×</button></div></div><div id="backgroundPanel" hidden><small>Nền bài viết</small><div class="pastel-options">${pastelColors.map(([name,c])=>`<button type="button" class="pastel-option ${c===(t.paperColor||db.settings.paperColor||'#ffffff')?'selected':''}" data-paper="${c}" style="--swatch:${c}" aria-label="${name}" title="${name}"></button>`).join('')}</div></div></div><div class="write-document" style="--paper:${esc(t.paperColor||db.settings.paperColor||'#ffffff')}"><div class="write-info-strip"><textarea class="editor-title" id="title" rows="1" aria-label="Tên chủ đề" placeholder="Nhập tên bài viết...">${esc(t.title)}</textarea>
+<div class="write-customization" id="writeCustomization"><div id="formatPanel"><button type="button" class="format-button" data-cmd="bold" aria-pressed="false" aria-label="In đậm"><b>B</b></button><button type="button" class="format-button" data-cmd="italic" aria-pressed="false" aria-label="In nghiêng"><i>I</i></button><button type="button" class="format-button" data-cmd="removeFormat" aria-label="Xóa định dạng" title="Xóa định dạng">Xóa ĐD</button><button type="button" class="format-button" data-cmd="undo" aria-label="Hoàn tác">↶</button><button type="button" class="format-button" data-cmd="redo" aria-label="Làm lại">↷</button><button type="button" class="format-button nv-color-toggle" aria-expanded="false" aria-label="Màu chữ và tô sáng" title="Màu chữ và tô sáng"><span aria-hidden="true">🎨</span> Màu</button><div class="format-colors"><small>Màu chữ</small>${['#293447','#b84545','#2870a5','#278060','#8456a9'].map(c=>`<button type="button" class="color-dot" data-ink="${c}" style="--swatch:${c}" aria-label="Màu chữ ${c}" title="Màu chữ"></button>`).join('')}</div><div class="format-colors"><small>Tô sáng</small>${['#fff1a9','#c9f2d6','#cde7ff','#f6d6e5'].map(c=>`<button type="button" class="color-dot" data-mark="${c}" style="--swatch:${c}" aria-label="Tô sáng ${c}" title="Tô sáng"></button>`).join('')}<button type="button" class="color-dot no-mark" data-mark="transparent" title="Bỏ tô sáng" aria-label="Bỏ tô sáng">×</button></div></div><div id="backgroundPanel" hidden><small>Nền bài viết</small><div class="pastel-options">${pastelColors.map(([name,c])=>`<button type="button" class="pastel-option ${c===(t.paperColor||db.settings.paperColor||'#ffffff')?'selected':''}" data-paper="${c}" style="--swatch:${c}" aria-label="${name}" title="${name}"></button>`).join('')}</div></div></div><div class="write-document" style="--paper:${esc(t.paperColor||db.settings.paperColor||'#ffffff')}"><div class="write-info-strip"><textarea class="editor-title" id="title" rows="1" aria-label="Tên chủ đề" placeholder="Nhập tên bài viết...">${esc(t.title)}</textarea>
 <div class="write-inline-chips">
 <details class="inline-chip-picker"><summary class="inline-chip tag-chip"># ${esc(t.tag==='Chưa phân loại'||!t.tag?'Phân loại':t.tag)} <span class="chip-chevron">⌄</span></summary>
 <div class="inline-chip-options"><div class="picker-label">Chọn thẻ chủ đề</div>
@@ -204,9 +204,10 @@ const updateFormatDock=()=>{
  dockFrame=requestAnimationFrame(()=>{
   dockFrame=0;
   if(!custom.isConnected)return;
-  if(window.matchMedia('(min-width:900px) and (pointer:fine)').matches){custom.style.removeProperty('top');custom.style.removeProperty('bottom');return}
   const vv=window.visualViewport;
   const visualBottom=vv?vv.offsetTop+vv.height:window.innerHeight;
+  const covered=Math.max(custom.offsetHeight,window.innerHeight-visualBottom+custom.offsetHeight);
+  document.querySelector('.write-document')?.style.setProperty('--nv-dock-clearance',Math.ceil(covered+20)+'px');
   custom.style.setProperty('top',Math.max(0,visualBottom-custom.offsetHeight)+'px','important');
   custom.style.setProperty('bottom','auto','important');
  });
@@ -226,6 +227,7 @@ window.nvDockCleanup=()=>{
  window.visualViewport?.removeEventListener('resize',viewportResize);
  window.visualViewport?.removeEventListener('scroll',updateFormatDock);
  window.removeEventListener('resize',viewportResize);
+ document.removeEventListener('selectionchange',syncFormatState);
  cancelAnimationFrame(dockFrame);cancelAnimationFrame(caretFrame);
  focusTimers.forEach(clearTimeout);
 };
@@ -234,7 +236,18 @@ formatPanel.addEventListener('pointerdown',e=>{
  if(e.target.closest('button'))e.preventDefault();
 });
 
-const applyFormat=(cmd,value)=>{rich.focus();document.execCommand(cmd,false,value||null);rich.dispatchEvent(new Event('input',{bubbles:true}))};
+const syncFormatState=()=>{
+ const s=getSelection();if(!s?.rangeCount||!rich.contains(s.anchorNode)||!rich.contains(s.focusNode))return;
+ custom.querySelectorAll('[data-cmd="bold"],[data-cmd="italic"]').forEach(b=>{
+  const active=document.queryCommandState(b.dataset.cmd);
+  b.setAttribute('aria-pressed',String(active));b.classList.toggle('is-active',active);
+ });
+};
+document.addEventListener('selectionchange',syncFormatState);
+rich.addEventListener('input',syncFormatState);
+rich.addEventListener('focus',syncFormatState);
+syncFormatState();
+const applyFormat=(cmd,value)=>{rich.focus({preventScroll:true});document.execCommand(cmd,false,value||null);syncFormatState();rich.dispatchEvent(new Event('input',{bubbles:true}))};
 custom.querySelectorAll('[data-cmd]').forEach(b=>b.addEventListener('pointerdown',e=>e.preventDefault()));
 custom.querySelectorAll('[data-ink],[data-mark]').forEach(b=>b.addEventListener('pointerdown',e=>e.preventDefault()));
 custom.querySelectorAll('[data-cmd]').forEach(b=>b.onclick=()=>applyFormat(b.dataset.cmd));
