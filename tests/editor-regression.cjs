@@ -1,5 +1,5 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert');
-const src=fs.readFileSync('index.html','utf8');
+const src=require('./_src.cjs');
 let next=1,timers=new Map(),reads=0,saves=0,awards=[];
 const el={innerHTML:'<div>ban đầu</div>',innerText:'ban đầu',listeners:{},addEventListener(k,f){(this.listeners[k]??=[]).push(f)}};
 const topic={content:'ban đầu',richHtml:el.innerHTML};
