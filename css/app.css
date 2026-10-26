@@ -468,3 +468,32 @@ html[data-theme=dark] .nv-welcome .nv-welcome-text{color:#c3cede}
 .btn.nv-danger-btn{background:#fff!important;color:#b42318!important;border:1px solid #e9a39b!important}
 body.dark .btn.nv-danger-btn,html[data-theme="dark"] .btn.nv-danger-btn.nv-danger-btn{background:transparent!important;color:#ffb4ab!important;border:1px solid #8c3b33!important}
 #nvEmptyTrash{margin-top:10px}
+
+/* v6.14.1: single horizontal row and space below all related-post actions. */
+body.writing-mode #writeCustomization.write-customization{
+ height:auto!important;min-height:54px!important;max-height:none!important;
+ padding:5px 8px calc(5px + env(safe-area-inset-bottom,0px))!important;
+}
+body.writing-mode #writeCustomization #formatPanel{
+ flex-wrap:nowrap!important;height:44px!important;max-height:44px!important;
+ overflow-x:auto!important;overflow-y:hidden!important;white-space:nowrap!important;
+ justify-content:flex-start!important;gap:4px!important;row-gap:0!important;
+}
+body.writing-mode #writeCustomization #formatPanel .format-colors{
+ display:none;flex:0 0 auto!important;flex-wrap:nowrap!important;gap:2px;
+}
+body.writing-mode #writeCustomization #formatPanel.nv-colors-open .format-colors{display:flex}
+body.writing-mode #writeCustomization #formatPanel .format-colors small{min-width:0;white-space:nowrap}
+body.writing-mode #writeCustomization #formatPanel .format-button{flex-shrink:0}
+body.writing-mode #writeCustomization #formatPanel .nv-color-toggle{display:inline-flex!important;padding:0 8px}
+body.writing-mode #writeCustomization #formatPanel .format-button[aria-pressed="true"]{
+ background:#245fc5!important;color:#fff!important;border-color:#245fc5!important;
+ box-shadow:inset 0 0 0 1px #fff6;
+}
+html[data-theme=dark] body.writing-mode #writeCustomization #formatPanel .format-button[aria-pressed="true"]{
+ background:#8ab8ff!important;color:#101827!important;border-color:#8ab8ff!important;
+}
+body.writing-mode .write-screen .write-document{
+ padding-bottom:var(--nv-dock-clearance,calc(80px + env(safe-area-inset-bottom,0px)))!important;
+}
+body.writing-mode .related-section{scroll-margin-bottom:var(--nv-dock-clearance,90px)}

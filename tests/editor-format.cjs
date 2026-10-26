@@ -1,0 +1,14 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert');
+const src=fs.readFileSync('js/app.js','utf8');
+const buttons=['bold','italic'].map(cmd=>({dataset:{cmd},attrs:{},classes:new Set(),setAttribute(k,v){this.attrs[k]=v},classList:{toggle(){}}}));
+const states={bold:false,italic:false};let inside=true;
+const context={getSelection:()=>({rangeCount:1,anchorNode:{},focusNode:{}}),rich:{contains:()=>inside},custom:{querySelectorAll:()=>buttons},document:{queryCommandState:cmd=>states[cmd]}};
+vm.createContext(context);const code=src.slice(src.indexOf('const syncFormatState=()=>'),src.indexOf("document.addEventListener('selectionchange',syncFormatState)"));
+vm.runInContext(code+';globalThis.sync=syncFormatState',context);
+context.sync();assert.deepEqual(buttons.map(b=>b.attrs['aria-pressed']),['false','false']);
+states.bold=true;context.sync();assert.equal(buttons[0].attrs['aria-pressed'],'true');
+states.italic=true;context.sync();assert.deepEqual(buttons.map(b=>b.attrs['aria-pressed']),['true','true']);
+states.bold=false;context.sync();assert.equal(buttons[0].attrs['aria-pressed'],'false');
+inside=false;states.italic=false;context.sync();assert.equal(buttons[1].attrs['aria-pressed'],'true','focus outside editor retains its state');
+assert(src.includes("document.removeEventListener('selectionchange',syncFormatState)"),'listener removed on navigation');
+console.log('PASS: bold/italic on, off, combined, outside-editor selection and navigation cleanup');

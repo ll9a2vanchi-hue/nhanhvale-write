@@ -3,10 +3,10 @@ const fs=require('fs'),vm=require('vm'),assert=require('assert');
 const src=require('./_src.cjs'),sw=fs.readFileSync('sw.js','utf8');
 // 4. one version constant drives title, badge text, aria-label and tooltip
 const versions=[...src.matchAll(/NV_VERSION\s*=\s*'([^']+)'/g)].map(m=>m[1]);
-assert.deepEqual(versions,['6.14.0'],'exactly one NV_VERSION constant');
+assert.deepEqual(versions,['6.14.1'],'exactly one NV_VERSION constant');
 assert(!/v6\.\d+(\.\d+)?<\/span>|Phiên bản 4\.3|<title>[^<]*v\d/.test(src),'no hard-coded version strings in markup');
 assert(/e\.textContent='v'\+v;e\.setAttribute\('aria-label','Phiên bản '\+v\);e\.title='Phiên bản '\+v/.test(src));
-assert(/nv-write-v42/.test(sw),'service worker cache bumped');
+assert(/nv-write-v43/.test(sw),'service worker cache bumped');
 // 4. signed-out first run is neutral, not a warning
 assert(src.includes("'Đang lưu trên máy · Đăng nhập để đồng bộ'"));
 assert(/nvNoSession=\/Cần đăng nhập qua email trước\|Auth session missing\/i/.test(src));
