@@ -45,7 +45,7 @@ const plain={id:'d',content:'p'};assert.deepEqual(m.slim(plain),{id:'d',content:
 // Saves and sync use the slim/full helpers; sync is no longer skipped when local storage is full.
 assert(src.includes('db.topics.forEach(nvSlimTopic);const nvJson=JSON.stringify(db);localStorage.setItem(KEY,nvJson)'),'save() slims before writing');
 assert(src.includes('(nvFullTopic(local)))'),'sync payload derives content_html');
-assert(src.includes('async function sync(){if(syncing||!navigator.onLine)return;'),'sync must still run when storage is full');
+assert(src.includes('async function nvSyncInner(){if(syncing||!navigator.onLine)return;')&&src.includes('function sync(){if(syncing||!navigator.onLine)return Promise.resolve();'),'sync must still run when storage is full');
 assert(!src.includes('contentHtml:html}'),'editor must not write a duplicate HTML copy');
 // Sanitizer parses in an inert document and sanitizes children of unwrapped tags.
 assert(src.includes("const safeRich=html=>{const box=new DOMParser().parseFromString("),'safeRich must use an inert DOMParser document');
