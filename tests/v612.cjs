@@ -1,7 +1,7 @@
 // v6.12.0 static checks (no dependencies): node tests/v612.cjs
 const fs=require('fs'),assert=require('assert');
 const src=require('./_src.cjs'),sw=fs.readFileSync('sw.js','utf8'),vc=JSON.parse(fs.readFileSync('vercel.json','utf8'));
-assert.deepEqual([...src.matchAll(/NV_VERSION\s*=\s*'([^']+)'/g)].map(m=>m[1]),['6.14.0']);assert(/nv-write-v42/.test(sw));
+assert.deepEqual([...src.matchAll(/NV_VERSION\s*=\s*'([^']+)'/g)].map(m=>m[1]),['6.14.1']);assert(/nv-write-v43/.test(sw));
 // 1. multi-tab: save merges first, then notifies; tabs listen on BroadcastChannel + storage
 assert(src.includes("const save=()=>{try{try{window.nvMergeDisk?.()}"),'save merges other tabs first');
 assert(src.includes("new BroadcastChannel('nv-write-sync')")&&src.includes("window.addEventListener('storage'"));
@@ -20,4 +20,4 @@ assert(src.includes('function nvPickConflicts(')&&src.includes('await nvPickConf
 // 6. labels
 assert(src.includes('aria-multiline="true" aria-label="Nội dung bài viết"'));assert(src.includes('id="saveLabel" title="Tự động lưu" role="img" aria-label="Tự động lưu"'));
 assert(src.includes('aria-label="Xóa định dạng" title="Xóa định dạng"'));assert(/<body><h1 class="nv-sr-only">/.test(src));
-console.log('PASS: v6.13.0 version/SW v42, multi-tab merge wiring, trash purge + tombstone, vercel.json headers, conflict dialog newlines/version, a11y labels');
+console.log('PASS: v6.13.0 version/SW v43, multi-tab merge wiring, trash purge + tombstone, vercel.json headers, conflict dialog newlines/version, a11y labels');

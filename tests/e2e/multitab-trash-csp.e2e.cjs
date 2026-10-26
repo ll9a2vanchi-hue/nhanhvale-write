@@ -85,7 +85,7 @@ const titles=p=>p.evaluate(()=>JSON.parse(localStorage.getItem('nv-write-v1')).t
   check('never-synced purged post is not uploaded',!cloud.has(lid));
   // labels (axe)
   await p.click('[data-tab=home]');await p.fill('#quick','nhãn');await p.click('#add');await p.waitForTimeout(200);await p.click('[data-open]');await p.waitForSelector('#body');
-  await p.addScriptTag({path:path.join(process.env.AXE_DIR||path.join(__dirname,'../../node_modules/axe-core'),'axe.min.js')}).catch(async()=>{await p.addScriptTag({path:require.resolve('axe-core/axe.min.js')})});
+  {let ax;try{ax=fs.readFileSync(path.join(process.env.AXE_DIR||path.join(__dirname,'../../node_modules/axe-core'),'axe.min.js'),'utf8')}catch{ax=fs.readFileSync(require.resolve('axe-core/axe.min.js'),'utf8')}await p.evaluate(ax)} // strict CSP blocks inline <script>; evaluate is CDP-injected
   const v=await p.evaluate(async()=>(await axe.run(document,{runOnly:['aria-input-field-name','aria-prohibited-attr','label-content-name-mismatch','page-has-heading-one']})).violations.map(x=>x.id));
   check('axe: editor name, save label, Tx label, page heading',v.length===0,v);
   await p.evaluate(()=>localStorage.clear());await ctx.close();}

@@ -22,12 +22,15 @@ const wt=document.createElement('div');wt.className='nv-write-toast';wt.setAttri
 const caretRect=()=>{try{const s=getSelection();if(!s.rangeCount)return null;const r=s.getRangeAt(0).cloneRange();r.collapse(false);const rects=r.getClientRects();if(rects.length)return rects[rects.length-1];const n=s.focusNode&&(s.focusNode.nodeType===1?s.focusNode:s.focusNode.parentElement);return n?n.getBoundingClientRect():null}catch{return null}};
 const hit=(a,b,m=6)=>a&&b&&!(a.bottom+m<b.top||a.top-m>b.bottom);
 function placeWT(){const vv=window.visualViewport,vTop=vv?vv.offsetTop:0,vH=vv?vv.height:innerHeight;const h=wt.offsetHeight||36;const vis=r=>r&&r.height>=h&&r.bottom>vTop+4&&r.top<vTop+vH-4;
- // Sit on app chrome (toolbar near the word count, else the formatting dock) so it never covers written text.
- const bar=document.querySelector('.write-toolbar')?.getBoundingClientRect();const dock=document.querySelector('body > #writeCustomization:not([hidden])')?.getBoundingClientRect();
- let top;if(vis(bar)&&bar.top>=vTop-2)top=bar.top+(bar.height-h)/2;else if(vis(dock))top=dock.top+(dock.height-h)/2;else{const c=caretRect();const A=vTop+8,B=vTop+vH-h-8;top=c&&hit({top:A,bottom:A+h},c)?B:A}
- wt.style.top=Math.round(top)+'px'}
+ // Sit on the top toolbar when it is on screen; otherwise just above the formatting dock (inside the visual viewport, so the
+ // on-screen keyboard is respected), or at the top if that would cover the caret. Never overlaps the dock.
+ const bar=document.querySelector('.write-toolbar')?.getBoundingClientRect();const dEl=document.querySelector('#writeCustomization:not([hidden])');const dock=dEl&&dEl.offsetHeight?dEl.getBoundingClientRect():null;
+ const A=vTop+8,c=caretRect();const onDock=t=>dock&&hit({top:t,bottom:t+h},dock,4);
+ let top;if(vis(bar)&&bar.top>=vTop-2&&!onDock(bar.top+(bar.height-h)/2))top=bar.top+(bar.height-h)/2;else{const limit=dock&&dock.top<vTop+vH?dock.top:vTop+vH;const B=limit-h-8;top=B>=A&&!(c&&hit({top:B,bottom:B+h},c))?B:A}
+ if(onDock(top))top=A;wt.style.top=Math.round(top)+'px'}
 window.nvWritingToast=(title,label)=>{wt.innerHTML='<span aria-hidden="true">✦</span><b></b><span></span>';wt.querySelector('b').textContent=title;wt.querySelectorAll('span')[1].textContent=label;placeWT();wt.classList.add('show');clearTimeout(wtTimer);wtTimer=setTimeout(()=>wt.classList.remove('show'),2600)};
 document.addEventListener('input',e=>{if(wt.classList.contains('show')&&e.target?.id==='body')placeWT()},true);
+const rePlaceWT=()=>{if(wt.classList.contains('show'))requestAnimationFrame(placeWT)};window.visualViewport?.addEventListener('resize',rePlaceWT);window.visualViewport?.addEventListener('scroll',rePlaceWT);addEventListener('scroll',rePlaceWT,{passive:true});addEventListener('resize',rePlaceWT);document.addEventListener('click',e=>{if(e.target.closest?.('#writeCustomization'))setTimeout(rePlaceWT,0)},true);
 // ---- 3. 'Màu nền' panel closes on outside tap, Escape, typing ----
 const openPaper=()=>document.querySelector('body > #backgroundPanel:not([hidden])');
 const closePaper=()=>{const p=openPaper();if(p)p.hidden=true;return !!p};

@@ -1,6 +1,6 @@
 // v6.13.0 static checks (no dependencies): node tests/v613.cjs
 const fs=require('fs'),assert=require('assert');const src=require('./_src.cjs'),sw=fs.readFileSync(__dirname+'/../sw.js','utf8');
-assert.deepEqual([...src.matchAll(/NV_VERSION\s*=\s*'([^']+)'/g)].map(m=>m[1]),['6.14.0']);assert(/nv-write-v42/.test(sw));
+assert.deepEqual([...src.matchAll(/NV_VERSION\s*=\s*'([^']+)'/g)].map(m=>m[1]),['6.14.1']);assert(/nv-write-v43/.test(sw));
 // (a) incremental sync wiring
 assert(src.includes("const NV_SS='nv-write-sync-state-v1'"),'sync state key');
 assert(/tq=tq\.gt\('updated_at',ss\.topics\.wm\)/.test(src),'topics incremental filter');
@@ -26,4 +26,4 @@ assert(!/>Streak</.test(src)&&!/Copy bài/.test(src)&&!/aria-label="Highlight/.t
 assert(src.includes('class="format-button nv-color-toggle" aria-expanded="false"'));
 // (c) IME
 assert(!/compositionstart[^\n]{0,200}(addRange|removeAllRanges|innerHTML\s*=)/.test(src),'no selection/DOM writes in compositionstart handlers');
-console.log('PASS: v6.13.0 version/SW v42, incremental sync wiring, multi-tab aux merge, UI labels/CSS, IME guard');
+console.log('PASS: v6.13.0 version/SW v43, incremental sync wiring, multi-tab aux merge, UI labels/CSS, IME guard');

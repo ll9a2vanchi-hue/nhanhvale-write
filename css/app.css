@@ -468,3 +468,55 @@ html[data-theme=dark] .nv-welcome .nv-welcome-text{color:#c3cede}
 .btn.nv-danger-btn{background:#fff!important;color:#b42318!important;border:1px solid #e9a39b!important}
 body.dark .btn.nv-danger-btn,html[data-theme="dark"] .btn.nv-danger-btn.nv-danger-btn{background:transparent!important;color:#ffb4ab!important;border:1px solid #8c3b33!important}
 #nvEmptyTrash{margin-top:10px}
+
+/* v6.14.1 — dark-mode surfaces, light-mode AA contrast, compact dock clear-format, toast placement */
+/* 1. Dark mode: components that kept light backgrounds or #222 text */
+html[data-theme=dark] .related-open,html[data-theme=dark] .nv-supplement-item .related-open{background:#233146;color:#e5eaf3}
+html[data-theme=dark] .nv-supplement-item .related-open{background:#29243a}
+html[data-theme=dark] .related-open small,html[data-theme=dark] .related-kind,html[data-theme=dark] .nv-related-item .related-kind{color:#a9b5c8}
+html[data-theme=dark] .nv-supplement-item .related-kind,html[data-theme=dark] .nv-parent-group .related-kind{color:#c6aff9}
+html[data-theme=dark] .related-unlink{background:#2a384e;color:#c2cad8}
+html[data-theme=dark] .related-unlink:hover{background:#344257;color:#ffb4ab}
+html[data-theme=dark] .settings-back,html[data-theme=dark] .icon-action{background:#2a384e;color:#e5eaf3}
+html[data-theme=dark] .icon-action.danger{color:#ffb4ab}
+html[data-theme=dark] .nv-conflict-dialog{background:#1b2637;color:#e5eaf3;border:1px solid #344257}
+html[data-theme=dark] .nv-conflict-columns article{border-color:#344257;background:#152031}
+html[data-theme=dark] .nv-conflict-actions button{background:#2a384e;color:#e5eaf3;border-color:#4a5b74}
+html[data-theme=dark] .nv-conflict-actions button:hover{background:#344257}
+html[data-theme=dark] .two .badge{background:#1b2637;border-color:#344257;box-shadow:none}
+html[data-theme=dark] .two .badge b,html[data-theme=dark] .two .badge.locked b{color:#e5eaf3}
+html[data-theme=dark] .two .badge small,html[data-theme=dark] .badge small{color:#a9b5c8}
+html[data-theme=dark] .two .badge .bar{background:#2f3d53}
+html[data-theme=dark] .two .badge .bar>div{background:#7fb0f0}
+html[data-theme=dark] .two .badge .award-icon{background:#243553;color:#9cc4ff}
+html[data-theme=dark] .two .badge:nth-child(3n+2) .award-icon{background:#3d2f1e;color:#f3c27e}
+html[data-theme=dark] .two .badge:nth-child(3n) .award-icon{background:#1d3b37;color:#8fd8cb}
+html[data-theme=dark] .two .badge:nth-child(8) .award-icon{background:#3d351b;color:#f0d27a}
+html[data-theme=dark] .nv-topic-linked{color:#c6aff9}
+html[data-theme=dark] #accountStatus{color:#a9b5c8}
+/* 4. Light mode: WCAG AA (≥4.5:1 text) */
+html:not([data-theme=dark]) .nv-topic-state.todo{color:#556274}
+html:not([data-theme=dark]) .nv-streak-card.is-burning .nv-streak-days,html:not([data-theme=dark]) .nv-streak-card.is-milestone .nv-streak-days{color:#b45309}
+html:not([data-theme=dark]) .nv-topic-view button{color:#526075}
+html:not([data-theme=dark]) .nv-topic-view button.active{color:#263b57}
+.nv-topic-view button,.nv-topic-view button.active{font-size:12px}
+.nv-group-main small,.nv-group-child small,.nv-supplement-list-item small{font-size:12px}
+html:not([data-theme=dark]) .nv-group-main small,html:not([data-theme=dark]) .nv-group-child small,html:not([data-theme=dark]) .nv-supplement-list-item small{color:#5b6779}
+html:not([data-theme=dark]) .nv-tier{color:#5b6779}
+html:not([data-theme=dark]) .nv-tier.unlocked{color:#6540c8}
+html:not([data-theme=dark]) .nv-related-label{color:#6f4fb8}
+html:not([data-theme=dark]) .nv-related-group .nv-related-label,html:not([data-theme=dark]) .related-kind,html:not([data-theme=dark]) .nv-related-item .related-kind,html:not([data-theme=dark]) .related-open small{color:#5b6779}
+html:not([data-theme=dark]) .nv-supplement-item .related-kind,html:not([data-theme=dark]) .nv-parent-group .related-kind{color:#6f4fb8}
+html:not([data-theme=dark]) .two .badge.locked b{color:#5b6779}
+html:not([data-theme=dark]) .two .badge small{color:#5f6b7d}
+html:not([data-theme=dark]) #accountStatus{color:#5f6b7d}
+html:not([data-theme=dark]) .nv-account-dot:not(.online),html:not([data-theme=dark]) .nv-account-count{color:#536173}
+html:not([data-theme=dark]) .nv-account-separator{color:#5f6b7d}
+html:not([data-theme=dark]) #nvQuickRecent{color:#19704f}
+/* 3. Clear-format: text label on wide screens, icon on <400px (accessible name kept via aria-label + visually-hidden text) */
+.nv-clear-format .nv-clear-format-icon{display:none}
+@media(max-width:399.98px){
+ #writeCustomization #formatPanel .format-button.nv-clear-format{width:44px!important;min-width:44px;max-width:44px;padding:0!important;flex:0 0 44px!important}
+ .nv-clear-format .nv-clear-format-icon{display:inline-block;vertical-align:middle}
+ .nv-clear-format .nv-clear-format-text{position:absolute!important;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+}

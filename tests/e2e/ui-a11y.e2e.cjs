@@ -11,7 +11,7 @@ const name=e=>e;
  for(const theme of ['light','dark']){const ctx=await br.newContext(opt);await ctx.route(/supabase\.co|esm\.sh/,r=>r.abort());const p=await ctx.newPage();p.on('pageerror',e=>errs.push(e.message));
   await p.addInitScript(([t,th])=>{if(!localStorage.getItem('nv-write-v1'))localStorage.setItem('nv-write-v1',JSON.stringify({topics:t,logs:{},settings:{theme:th},syncQueue:[]}))},[seed(),theme]);
   await p.goto(BASE,{waitUntil:'networkidle'});await p.waitForTimeout(400);
-  const probe=async where=>{await p.addScriptTag({content:AXE});const tag=`${theme} ${where}`;
+  const probe=async where=>{await p.evaluate(AXE);const tag=`${theme} ${where}`;
    const ax=await p.evaluate(async()=>{const r=await axe.run(document,{runOnly:['color-contrast']});return r.violations.flatMap(v=>v.nodes.map(n=>n.target.join(' ')))});
    check(`${tag}: 0 axe colour-contrast violations`,ax.length===0,ax.slice(0,8));
    const small=await p.evaluate(()=>{const o=[];const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;while(n=w.nextNode()){if(!n.textContent.trim())continue;const e=n.parentElement;const r=e.getBoundingClientRect();if(!r.width||!r.height)continue;const cs=getComputedStyle(e);if(cs.visibility==='hidden'||+cs.opacity===0)continue;if(parseFloat(cs.fontSize)<12)o.push((e.id?'#'+e.id:e.tagName.toLowerCase()+'.'+[...e.classList].join('.'))+' '+cs.fontSize)}return [...new Set(o)]});
