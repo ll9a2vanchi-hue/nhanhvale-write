@@ -43,7 +43,7 @@ const diff={id:'b',richHtml:'<i>r</i>',contentHtml:'<i>c</i>'};m.slim(diff);asse
 const noRich={id:'c',contentHtml:'<b>only</b>'};m.slim(noRich);assert.equal(noRich.contentHtml,'<b>only</b>','record without richHtml is untouched');
 const plain={id:'d',content:'p'};assert.deepEqual(m.slim(plain),{id:'d',content:'p'});assert.equal(m.full(plain).contentHtml,undefined);}
 // Saves and sync use the slim/full helpers; sync is no longer skipped when local storage is full.
-assert(src.includes('db.topics.forEach(nvSlimTopic);localStorage.setItem(KEY'),'save() slims before writing');
+assert(src.includes('db.topics.forEach(nvSlimTopic);const nvJson=JSON.stringify(db);localStorage.setItem(KEY,nvJson)'),'save() slims before writing');
 assert(src.includes('(nvFullTopic(local)))'),'sync payload derives content_html');
 assert(src.includes('async function sync(){if(syncing||!navigator.onLine)return;'),'sync must still run when storage is full');
 assert(!src.includes('contentHtml:html}'),'editor must not write a duplicate HTML copy');
