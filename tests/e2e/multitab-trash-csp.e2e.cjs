@@ -1,7 +1,7 @@
 // v6.12.0 Playwright e2e: multi-tab merge, same-post edits in two tabs, permanent delete + empty trash, CSP, labels.
 // Serve the repo WITH the vercel.json headers (node tests/serve-with-headers.cjs . 8010), then:
 //   BASE=http://localhost:8010/ DEVICE="Pixel 7" node tests/e2e/multitab-trash-csp.e2e.cjs
-// Supabase is fully mocked via page.route — no real network or DB access. esm.sh is real (checks CSP allows supabase-js).
+// Supabase is fully mocked via page.route — no real network or DB access. supabase-js is the vendored /vendor bundle (checks CSP allows it).
 const {chromium,devices}=require('playwright');const fs=require('fs'),path=require('path');
 const BASE=process.env.BASE||'http://localhost:8010/',DEVICE=process.env.DEVICE||'';
 const b64=o=>Buffer.from(JSON.stringify(o)).toString('base64url');const UID='00000000-0000-4000-8000-000000000001';
@@ -58,7 +58,7 @@ const titles=p=>p.evaluate(()=>JSON.parse(localStorage.getItem('nv-write-v1')).t
   const doSync=async()=>{await p.waitForFunction(()=>!syncing,null,{timeout:15000});await p.evaluate(()=>sync());await p.waitForFunction(()=>!syncing,null,{timeout:15000})};
   for(const n of ['Bí mật 1','Bí mật 2','Bí mật 3']){await p.fill('#quick',n);await p.click('#add');await p.waitForTimeout(200)}
   await p.evaluate(()=>db.topics.forEach(t=>put(t,{content:'nội dung riêng tư '+t.title,richHtml:'<div>nội dung riêng tư</div>'})));
-  await doSync();check('CSP allows supabase-js from esm.sh (sync reached fake cloud)',cloud.size===3,cloud.size);
+  await doSync();check('CSP allows vendored supabase-js (sync reached fake cloud)',cloud.size===3,cloud.size);
   const ids=await p.evaluate(()=>db.topics.map(t=>t.id));
   await p.evaluate(()=>{const c=db.topics.slice(0,3);c.forEach(t=>put(t,{deleted:true}));render()});await doSync();
   await p.click('[data-tab=topics]');await p.click('#nvOpenTrash');
