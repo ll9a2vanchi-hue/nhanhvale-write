@@ -158,3 +158,36 @@ function onExternal(k){pending.add(k);clearTimeout(tm);tm=setTimeout(()=>{const 
 if(bc)bc.onmessage=e=>{if(e.data&&KEYS[e.data.k])onExternal(e.data.k)};
 window.addEventListener('storage',e=>{for(const k in KEYS)if(e.key===KEYS[k])onExternal(k)});
 })();
+
+/* v6.15 secondary formatting panel (do not steal selection when toggling). */
+(()=>{
+ const close=()=>{
+   const more=document.querySelector('#writeCustomization .nv-tool-more');
+   const button=document.querySelector('#writeCustomization .nv-more-toggle');
+   if(more)more.hidden=true;
+   if(button)button.setAttribute('aria-expanded','false');
+ };
+ document.addEventListener('pointerdown',e=>{
+   if(e.target.closest('.nv-more-toggle'))e.preventDefault();
+ },true);
+ document.addEventListener('click',e=>{
+   const button=e.target.closest('.nv-more-toggle');
+   if(button){
+     e.preventDefault();
+     const root=button.closest('#writeCustomization'),more=root?.querySelector('.nv-tool-more');
+     if(!more)return;
+     const open=more.hidden;
+     if(open&&root.querySelector('#formatPanel.nv-colors-open')){
+       root.querySelector('.nv-color-toggle')?.click();
+     }
+     more.hidden=!open;
+     button.setAttribute('aria-expanded',String(open));
+     return;
+   }
+   if(e.target.closest('.nv-color-toggle')||e.target.closest('.nv-tool-more [data-cmd]')){
+     close();return;
+   }
+   if(!e.target.closest('.nv-tool-more'))close();
+ });
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+})();

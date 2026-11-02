@@ -497,3 +497,61 @@ body.writing-mode .write-screen .write-document{
  padding-bottom:var(--nv-dock-clearance,calc(80px + env(safe-area-inset-bottom,0px)))!important;
 }
 body.writing-mode .related-section{scroll-margin-bottom:var(--nv-dock-clearance,90px)}
+
+/* v6.15: focused formatting dock; secondary actions and colours are independent popovers. */
+body.writing-mode #writeCustomization.write-customization{overflow:visible!important;isolation:isolate}
+body.writing-mode #writeCustomization #formatPanel{
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ flex-wrap:nowrap!important;gap:4px!important;width:100%;height:44px!important;max-height:44px!important;
+ overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none;scroll-behavior:smooth}
+body.writing-mode #writeCustomization #formatPanel::-webkit-scrollbar{display:none}
+body.writing-mode #writeCustomization #formatPanel>.format-button{
+ display:inline-flex!important;align-items:center;justify-content:center;flex:0 0 44px!important;
+ width:44px!important;min-width:44px!important;height:44px!important;min-height:44px!important;
+ padding:0!important;border-radius:10px;font-size:19px!important;font-weight:650;line-height:1}
+body.writing-mode #writeCustomization #formatPanel>.nv-color-toggle,
+body.writing-mode #writeCustomization #formatPanel>.nv-more-toggle{flex:0 0 44px!important;padding:0!important;font-size:20px!important}
+body.writing-mode #writeCustomization #formatPanel>.format-button[aria-expanded="true"]{
+ background:#e5edfc!important;border-color:#8daee9!important;color:#2454a1!important}
+body.writing-mode #writeCustomization .nv-tool-popover{
+ position:absolute;bottom:calc(100% + 7px);left:8px;right:8px;width:min(440px,calc(100% - 16px));
+ max-width:440px;margin-inline:auto;padding:12px;background:#fff;color:#243347;border:1px solid #dbe4f0;
+ border-radius:15px;box-shadow:0 12px 32px #101c293d;z-index:2147483001;
+ max-height:min(270px,45dvh);overflow-y:auto}
+body.writing-mode #writeCustomization .nv-tool-more[hidden]{display:none!important}
+body.writing-mode #writeCustomization .nv-tool-more{display:grid;gap:6px}
+body.writing-mode #writeCustomization .nv-tool-more .format-button{
+ display:flex;align-items:center;gap:12px;justify-content:flex-start;width:100%;
+ min-height:44px!important;padding:8px 12px!important;border:1px solid #e2e7ef;
+ border-radius:10px;background:#f7f9fc;color:#25364b;font-size:14px;font-weight:650;text-align:left}
+body.writing-mode #writeCustomization .nv-tool-more .format-button>span:first-child{
+ flex:0 0 24px;text-align:center;font-size:18px}
+body.writing-mode #writeCustomization .nv-tool-colors{display:none}
+body.writing-mode #writeCustomization #formatPanel.nv-colors-open ~ .nv-tool-colors{display:grid;gap:11px}
+body.writing-mode #writeCustomization .nv-tool-colors .format-colors{
+ display:flex!important;align-items:center;gap:4px;flex-wrap:wrap}
+body.writing-mode #writeCustomization .nv-tool-colors .format-colors small{
+ flex:1 1 100%;width:100%;min-width:0;font-size:13px!important;
+ font-weight:700;color:#596a81!important;margin-bottom:2px}
+body.writing-mode #writeCustomization .nv-tool-colors .color-dot{
+ position:relative;display:inline-flex;align-items:center;justify-content:center;
+ flex:0 0 44px;width:44px!important;height:44px!important;min-width:44px;min-height:44px!important;
+ border:0!important;box-shadow:none!important;background:transparent!important;border-radius:50%;cursor:pointer}
+body.writing-mode #writeCustomization .nv-tool-colors .color-dot::before{
+ content:"";position:absolute;inset:7px;border-radius:50%;border:1px solid #aab7c7;
+ background:var(--swatch,#fff);box-shadow:0 0 0 2px #fff inset}
+body.writing-mode #writeCustomization .nv-tool-colors .color-dot.no-mark::before{background:#fff}
+body.writing-mode #writeCustomization .nv-tool-colors .color-dot.no-mark{
+ color:#b84545!important;font-size:20px!important;font-weight:700;z-index:0}
+body.writing-mode #writeCustomization .nv-tool-colors .color-dot.no-mark::before{z-index:-1}
+html[data-theme="dark"] body.writing-mode #writeCustomization .nv-tool-popover{
+ background:#1b2637;color:#e5eaf3;border-color:#394a61;box-shadow:0 12px 32px #0009}
+html[data-theme="dark"] body.writing-mode #writeCustomization .nv-tool-more .format-button{
+ color:#e5eaf3;background:#253346;border-color:#43546b}
+html[data-theme="dark"] body.writing-mode #writeCustomization #formatPanel>.format-button[aria-expanded="true"]{
+ background:#334c6b!important;color:#e5efff!important;border-color:#6488ba!important}
+html[data-theme="dark"] body.writing-mode #writeCustomization .nv-tool-colors .format-colors small{color:#c0cee2!important}
+@media(min-width:900px) and (pointer:fine){
+ body.writing-mode #writeCustomization .nv-tool-popover{bottom:auto;top:calc(100% + 8px)}}
+@media(max-width:359px){body.writing-mode #writeCustomization #formatPanel{justify-content:flex-start!important}}
+@media(prefers-reduced-motion:reduce){body.writing-mode #writeCustomization #formatPanel{scroll-behavior:auto}}
