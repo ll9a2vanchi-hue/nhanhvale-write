@@ -569,3 +569,6 @@ body.writing-mode #writeCustomization #formatPanel>.nv-color-toggle .nv-ink-swat
  display:block;width:21px;height:4px;flex:none;border-radius:999px;
  background:linear-gradient(90deg,#2d76d1 0 34%,#8456a9 34% 67%,#df775b 67% 100%);
 }
+
+/* v6.15.3 — readable empty streak state on narrow mobile cards. */
+.nv-streak-card .nv-streak-empty{font-size:clamp(14px,3.5vw,19px);line-height:1.25;overflow-wrap:break-word;letter-spacing:-.02em;color:inherit}
