@@ -555,3 +555,17 @@ html[data-theme="dark"] body.writing-mode #writeCustomization .nv-tool-colors .f
  body.writing-mode #writeCustomization .nv-tool-popover{bottom:auto;top:calc(100% + 8px)}}
 @media(max-width:359px){body.writing-mode #writeCustomization #formatPanel{justify-content:flex-start!important}}
 @media(prefers-reduced-motion:reduce){body.writing-mode #writeCustomization #formatPanel{scroll-behavior:auto}}
+
+/* v6.15.1 — minimal professional text-colour icon. */
+body.writing-mode #writeCustomization #formatPanel>.nv-color-toggle .nv-ink-icon{
+ display:inline-flex;flex-direction:column;align-items:center;justify-content:center;
+ width:26px;height:29px;gap:2px;color:inherit;
+}
+body.writing-mode #writeCustomization #formatPanel>.nv-color-toggle .nv-ink-letter{
+ display:block;font-family:inherit;font-size:19px;font-weight:800;line-height:19px;
+ letter-spacing:-.035em;
+}
+body.writing-mode #writeCustomization #formatPanel>.nv-color-toggle .nv-ink-swatch{
+ display:block;width:21px;height:4px;flex:none;border-radius:999px;
+ background:linear-gradient(90deg,#2d76d1 0 34%,#8456a9 34% 67%,#df775b 67% 100%);
+}
