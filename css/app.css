@@ -623,3 +623,6 @@ html[data-nv-motion=off] .nv-xp-level-up::after,
 html[data-nv-motion=off] .nv-streak-ignite,
 html[data-nv-motion=off] .nv-streak-count-pop .nv-streak-days,
 html[data-nv-motion=off] .nv-streak-sparkle::after{animation:none!important}
+
+/* v6.16.1 — animate only if motion is enabled; existing idle flame respects toggle. */
+html[data-nv-motion=off] .nv-streak-card.is-burning .nv-flame{animation:none!important;filter:none!important}

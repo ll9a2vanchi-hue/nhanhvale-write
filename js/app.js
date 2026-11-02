@@ -151,7 +151,7 @@ function bindEditorDraft(el,t){
  const excluded=e=>/insertFromPaste|insertFromDrop|history/.test(e.inputType||'');
  el.addEventListener('beforeinput',e=>{if(excluded(e))flush()});
  el.addEventListener('input',e=>{
-  dirty=true;$('#saveLabel')?.classList.add('nv-save-pending');
+  dirty=true;$('#saveLabel')?.classList.add('nv-save-pending');$('#saveLabel')?.classList.remove('nv-save-confirm');
   if(excluded(e)){eligible=false;flush();return}
   schedule();
  });
@@ -291,7 +291,7 @@ custom.querySelectorAll('[data-cmd]').forEach(b=>b.onclick=()=>applyFormat(b.dat
 custom.querySelectorAll('[data-ink]').forEach(b=>b.onclick=()=>applyFormat('foreColor',b.dataset.ink));
 custom.querySelectorAll('[data-mark]').forEach(b=>b.onclick=()=>applyFormat('hiliteColor',b.dataset.mark));
 paperPanel.querySelectorAll('[data-paper]').forEach(b=>b.onclick=()=>{put(t,{paperColor:b.dataset.paper});$('.write-document').style.setProperty('--paper',b.dataset.paper);paperPanel.querySelectorAll('[data-paper]').forEach(x=>x.classList.toggle('selected',x===b));paperPanel.hidden=true});
-rich.addEventListener('paste',e=>{e.preventDefault();const txt=e.clipboardData.getData('text/plain');document.execCommand('insertText',false,txt)});document.querySelectorAll('[data-set-tag]').forEach(b=>b.onclick=()=>{if(!db.categories.includes(b.dataset.setTag))return;put(t,{tag:b.dataset.setTag});render()});on('#newTag','click',()=>{const s=prompt('Tên thẻ mới:')?.trim();if(!s)return;if(!db.categories.includes(s)){db.categories.push(s);touchCategories()}put(t,{tag:s});render()});on('#finishTopic','click',()=>{nvSaveBeforeBack();const was=autoStatus(t),completed=was!=='done';if(!completed){put(t,{status:count(t.content)>50?'draft':'todo',completed_at:null})}else{put(t,{status:'done',completed_at:new Date().toISOString()});window.nvCelebrate?.('complete')}render();if(completed&&nvMotionEnabled()){const icon=$('#saveLabel');if(icon){icon.classList.add('nv-completion-draw');icon.addEventListener('animationend',e=>{if(e.target===icon)icon.classList.remove('nv-completion-draw')},{once:true})}}});on('#pin','click',()=>{put(t,{pinned:!t.pinned});render()});// Dải tiêu đề + chip trượt lên khi đọc; chỉ hiện lại khi cuộn về đầu.
+rich.addEventListener('paste',e=>{e.preventDefault();const txt=e.clipboardData.getData('text/plain');document.execCommand('insertText',false,txt)});document.querySelectorAll('[data-set-tag]').forEach(b=>b.onclick=()=>{if(!db.categories.includes(b.dataset.setTag))return;put(t,{tag:b.dataset.setTag});render()});on('#newTag','click',()=>{const s=prompt('Tên thẻ mới:')?.trim();if(!s)return;if(!db.categories.includes(s)){db.categories.push(s);touchCategories()}put(t,{tag:s});render()});on('#finishTopic','click',()=>{nvSaveBeforeBack();const was=autoStatus(t),completed=was!=='done';if(!completed){put(t,{status:count(t.content)>50?'draft':'todo',completed_at:null})}else{put(t,{status:'done',completed_at:new Date().toISOString()});window.nvCelebrate?.('complete')}render();if(completed&&nvMotionEnabled()){const icon=$('#saveLabel');if(icon){icon.classList.add('nv-completion-draw');icon.addEventListener('animationend',function cleanup(e){if(e.target!==icon)return;icon.classList.remove('nv-completion-draw');icon.removeEventListener('animationend',cleanup)})}}});on('#pin','click',()=>{put(t,{pinned:!t.pinned});render()});// Dải tiêu đề + chip trượt lên khi đọc; chỉ hiện lại khi cuộn về đầu.
 const readingBody=$('#body'),readingScreen=document.querySelector('.write-screen');
 if(readingBody&&readingScreen){
  let last=readingBody.scrollTop,down=0;
