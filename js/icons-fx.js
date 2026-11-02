@@ -76,7 +76,7 @@ icons(document.body);obs.observe(document.querySelector('main'),{childList:true,
 (()=>{
 const prefs=JSON.parse(localStorage.getItem('nv-write-fx')||'{}');let fx={motion:prefs.motion!==false,vibrate:prefs.vibrate!==false,ceremony:prefs.ceremony!==false};
 const bar=document.createElement('div');bar.className='nv-effects';bar.setAttribute('aria-label','Tùy chọn hiệu ứng');document.querySelector('#nvControls')?.appendChild(bar);
-function controls(){bar.innerHTML=[['motion','Hiệu ứng'],['vibrate','Rung'],['ceremony','Chúc mừng']].map(([k,label])=>`<button type="button" data-fx="${k}" aria-pressed="${fx[k]}">${label}: ${fx[k]?'Bật':'Tắt'}</button>`).join('')}
+function controls(){bar.innerHTML=[['motion','Hiệu ứng'],['vibrate','Rung'],['ceremony','Chúc mừng']].map(([k,label])=>`<button type="button" data-fx="${k}" aria-pressed="${fx[k]}">${label}: ${fx[k]?'Bật':'Tắt'}</button>`).join('');document.documentElement.dataset.nvMotion=fx.motion?'on':'off'}
 bar.onclick=e=>{const k=e.target.closest('[data-fx]')?.dataset.fx;if(!k)return;fx[k]=!fx[k];localStorage.setItem('nv-write-fx',JSON.stringify(fx));controls()};controls();
 const popup=document.createElement('div');popup.className='nv-celebrate';popup.setAttribute('role','status');popup.setAttribute('aria-live','polite');document.body.appendChild(popup);let close;
 function vibrate(){if(fx.vibrate&&navigator.vibrate)try{navigator.vibrate([35,35,65])}catch{}}

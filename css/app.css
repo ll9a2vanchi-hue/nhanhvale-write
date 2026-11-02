@@ -572,3 +572,54 @@ body.writing-mode #writeCustomization #formatPanel>.nv-color-toggle .nv-ink-swat
 
 /* v6.15.3 — readable empty streak state on narrow mobile cards. */
 .nv-streak-card .nv-streak-empty{font-size:clamp(14px,3.5vw,19px);line-height:1.25;overflow-wrap:break-word;letter-spacing:-.02em;color:inherit}
+
+/* ==== v6.16.0: purposeful, low-motion feedback. No editor/scroll geometry changes. ==== */
+#content .nv-topic{transition:transform 90ms ease,box-shadow 150ms ease;transform-origin:50% 50%}
+@media(hover:hover) and (pointer:fine){#content .nv-topic:hover{box-shadow:0 7px 20px #1a324016}}
+#content .nv-topic:active{transform:scale(.985)}
+body.writing-mode #content .write-document.nv-topic-enter{animation:nvArticleEnter 180ms ease-out both}
+@keyframes nvArticleEnter{from{opacity:.55;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+#saveLabel{transition:opacity 150ms ease,color 150ms ease}
+#saveLabel.nv-save-pending{opacity:.55}
+#saveLabel.nv-save-confirm{animation:nvSaveConfirm 390ms ease-out both}
+@keyframes nvSaveConfirm{0%{color:#7b8795;transform:scale(.95)}45%{color:#229a71;transform:scale(1.12)}100%{transform:scale(1)}}
+#saveLabel.nv-completion-draw{animation:nvCompletionPop 360ms ease-out both}
+#saveLabel.nv-completion-draw svg path{stroke-dasharray:32;stroke-dashoffset:32;animation:nvCheckDraw 290ms ease-out forwards}
+@keyframes nvCompletionPop{0%{color:#18a06a;transform:scale(.90)}60%{color:#18a06a;transform:scale(1.14)}100%{transform:scale(1)}}
+@keyframes nvCheckDraw{to{stroke-dashoffset:0}}
+body.writing-mode #writeCustomization #formatPanel .format-button{transition:background-color 130ms ease,color 130ms ease,border-color 130ms ease,transform 90ms ease}
+body.writing-mode #writeCustomization #formatPanel .format-button:active{transform:scale(.94)}
+body.writing-mode #writeCustomization #formatPanel.nv-colors-open ~ .nv-tool-colors,
+body.writing-mode #writeCustomization .nv-tool-more:not([hidden]){animation:nvToolAppear 150ms cubic-bezier(.2,.72,.3,1) both}
+@keyframes nvToolAppear{from{opacity:.2;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.nv-xp .nv-xp-track i{transition:width 350ms cubic-bezier(.2,.75,.3,1)}
+.nv-xp.nv-xp-level-up{position:relative;animation:nvLevelUp 500ms ease-out}
+.nv-xp.nv-xp-level-up::after{content:'✦';pointer-events:none;position:absolute;right:16px;top:1px;color:#8865e9;font-size:22px;animation:nvLevelStar 700ms ease-out both}
+@keyframes nvLevelUp{0%,100%{box-shadow:0 2px 14px #1b2b3c10}40%{box-shadow:0 0 0 3px #a18af835,0 7px 22px #8865e929}}
+@keyframes nvLevelStar{0%{opacity:0;transform:translateY(8px) scale(.6)}35%{opacity:1;transform:translateY(0) scale(1.1)}100%{opacity:0;transform:translateY(-8px) scale(.8)}}
+.nv-streak-count-pop .nv-streak-days{animation:nvCountPop 360ms cubic-bezier(.2,.85,.3,1.2) both}
+@keyframes nvCountPop{0%{transform:scale(.91);opacity:.65}60%{transform:scale(1.07);opacity:1}100%{transform:scale(1)}}
+.nv-streak-sparkle{position:relative}
+.nv-streak-sparkle::after{content:'✦';position:absolute;top:8px;right:14px;color:#f4ab28;font-size:18px;pointer-events:none;animation:nvStreakSpark 680ms ease-out both}
+@keyframes nvStreakSpark{0%{opacity:0;transform:translateY(9px) scale(.7)}35%{opacity:1;transform:translateY(-2px) scale(1.1)}100%{opacity:0;transform:translateY(-10px) scale(.75)}}
+@media(prefers-reduced-motion:reduce){
+ #content .nv-topic,#saveLabel,body.writing-mode #writeCustomization #formatPanel .format-button,.nv-xp .nv-xp-track i{transition:none!important}
+ .nv-topic-enter,.nv-save-confirm,.nv-completion-draw,.nv-completion-draw svg path,
+ .nv-tool-colors,.nv-tool-more,.nv-xp-level-up,.nv-xp-level-up::after,
+ .nv-streak-ignite,.nv-streak-count-pop .nv-streak-days,.nv-streak-sparkle::after{animation:none!important}
+}
+html[data-nv-motion=off] #content .nv-topic,
+html[data-nv-motion=off] #saveLabel,
+html[data-nv-motion=off] .nv-xp .nv-xp-track i,
+html[data-nv-motion=off] body.writing-mode #writeCustomization #formatPanel .format-button{transition:none!important}
+html[data-nv-motion=off] .nv-topic-enter,
+html[data-nv-motion=off] .nv-save-confirm,
+html[data-nv-motion=off] .nv-completion-draw,
+html[data-nv-motion=off] .nv-completion-draw svg path,
+html[data-nv-motion=off] .nv-tool-colors,
+html[data-nv-motion=off] .nv-tool-more,
+html[data-nv-motion=off] .nv-xp-level-up,
+html[data-nv-motion=off] .nv-xp-level-up::after,
+html[data-nv-motion=off] .nv-streak-ignite,
+html[data-nv-motion=off] .nv-streak-count-pop .nv-streak-days,
+html[data-nv-motion=off] .nv-streak-sparkle::after{animation:none!important}
