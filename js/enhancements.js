@@ -191,3 +191,37 @@ window.addEventListener('storage',e=>{for(const k in KEYS)if(e.key===KEYS[k])onE
  });
  document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
 })();
+
+
+/* v6.16.2 — underline/strikethrough dropdown, without stealing the editor selection. */
+(()=>{
+ const root=()=>document.querySelector('body > #writeCustomization');
+ const close=()=>{
+  const r=root(),menu=r?.querySelector('#nvToolDecoration'),button=r?.querySelector('.nv-deco-toggle');
+  if(menu)menu.hidden=true;
+  if(button)button.setAttribute('aria-expanded','false');
+ };
+ document.addEventListener('pointerdown',e=>{
+  if(e.target.closest('.nv-deco-toggle,#nvToolDecoration button'))e.preventDefault();
+ },true);
+ document.addEventListener('click',e=>{
+  const toggle=e.target.closest('.nv-deco-toggle');
+  if(toggle){
+   e.preventDefault();
+   const r=toggle.closest('#writeCustomization'),menu=r?.querySelector('#nvToolDecoration');
+   if(!menu)return;
+   const opening=menu.hidden;
+   if(opening){
+    r.querySelector('#formatPanel.nv-colors-open .nv-color-toggle')?.click();
+    r.querySelector('.nv-more-toggle[aria-expanded="true"]')?.click();
+   }
+   menu.hidden=!opening;
+   toggle.setAttribute('aria-expanded',String(opening));
+   return;
+  }
+  if(e.target.closest('#nvToolDecoration [data-cmd]')){close();return}
+  if(!e.target.closest('#nvToolDecoration'))close();
+ });
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+ document.addEventListener('beforeinput',e=>{if(e.target?.id==='body')close()},true);
+})();

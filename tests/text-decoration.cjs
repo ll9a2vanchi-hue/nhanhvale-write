@@ -1,0 +1,23 @@
+// v6.16.2 regression: one toolbar button offers two preserved rich-text formats.
+const fs=require('node:fs'),assert=require('node:assert/strict');
+const app=fs.readFileSync('js/app.js','utf8'),enh=fs.readFileSync('js/enhancements.js','utf8'),css=fs.readFileSync('css/app.css','utf8');
+assert(app.includes('class="format-button nv-deco-toggle"'),'one combined trigger');
+assert(app.includes('aria-controls="nvToolDecoration"'),'accessible disclosure');
+assert(app.includes('id="nvToolDecoration" class="nv-tool-decoration nv-tool-popover" hidden'),'initially closed');
+assert(app.includes('data-cmd="underline" aria-pressed="false"'),'underline choice');
+assert(app.includes('data-cmd="strikeThrough" aria-pressed="false"'),'strikethrough choice');
+assert(app.includes("'S','STRIKE','DEL'"),'strikethrough tags retained when saving');
+assert(app.includes('child.style.textDecorationLine=decoration'),'inline text decoration retained');
+assert(app.includes('document.queryCommandState(\'strikeThrough\')'),'active state');
+assert(app.includes("custom.querySelectorAll('[data-cmd]').forEach(b=>b.addEventListener('pointerdown',e=>e.preventDefault()))"),'no selection stealing on tap');
+assert(enh.includes("if(e.target.closest('.nv-deco-toggle,#nvToolDecoration button'))e.preventDefault()"),'trigger keeps selection');
+assert(enh.includes("if(e.key==='Escape')close()"),'Escape closes choices');
+assert(enh.includes("r.querySelector('.nv-more-toggle[aria-expanded=\"true\"]')?.click()"),'other popover closes');
+assert(css.includes('.nv-tool-decoration[hidden]{display:none!important}'),'hidden menu cannot be exposed by CSS');
+const from=app.indexOf('<div class="write-customization" id="writeCustomization">');
+const to=app.indexOf('<div class="write-document" style',from);
+assert(from>=0&&to>from,'editor markup present');
+const markup=app.slice(from,to);
+const count=s=>markup.split(s).length-1;
+assert.equal(count('<div'),count('</div>'),'editor markup remains balanced');
+console.log('PASS: combined underline/strikethrough, safe persistence, active state, selection and layout');

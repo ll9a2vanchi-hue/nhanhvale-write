@@ -626,3 +626,38 @@ html[data-nv-motion=off] .nv-streak-sparkle::after{animation:none!important}
 
 /* v6.16.1 — animate only if motion is enabled; existing idle flame respects toggle. */
 html[data-nv-motion=off] .nv-streak-card.is-burning .nv-flame{animation:none!important;filter:none!important}
+
+/* ==== v6.16.2 — single U button with underline / strikethrough choices. ==== */
+body.writing-mode #writeCustomization #formatPanel>.nv-deco-toggle{padding:0!important}
+body.writing-mode #writeCustomization .nv-deco-glyph{display:inline-flex;align-items:flex-end;justify-content:center;position:relative;width:35px;height:30px;gap:2px}
+body.writing-mode #writeCustomization .nv-deco-glyph>u{font-size:20px;font-weight:750;line-height:26px;text-underline-offset:2px}
+body.writing-mode #writeCustomization .nv-deco-caret{font-size:12px;line-height:17px;font-weight:700;color:inherit;opacity:.75}
+body.writing-mode #writeCustomization #formatPanel>.nv-deco-toggle.is-active{color:#245fc5!important}
+body.writing-mode #writeCustomization .nv-tool-decoration[hidden]{display:none!important}
+body.writing-mode #writeCustomization .nv-tool-decoration:not([hidden]){
+ display:grid;gap:6px;left:min(11vw,48px);right:auto;margin:0;
+ width:min(248px,calc(100% - 58px));max-width:248px;
+ animation:nvToolAppear 150ms cubic-bezier(.2,.72,.3,1) both
+}
+body.writing-mode #writeCustomization .nv-deco-choice{
+ display:flex;align-items:center;gap:12px;min-height:46px;width:100%;padding:8px 12px;
+ border:1px solid #e2e7ef;border-radius:10px;background:#f7f9fc;color:#25364b;
+ font-size:14px;font-weight:650;text-align:left;cursor:pointer
+}
+body.writing-mode #writeCustomization .nv-deco-preview{
+ flex:0 0 27px;font-size:20px;font-weight:800;text-align:center;line-height:1.2
+}
+body.writing-mode #writeCustomization .nv-deco-choice[aria-pressed=true]{
+ border-color:#96b5ee;background:#e8f0ff;color:#2059b5
+}
+body.writing-mode #writeCustomization .nv-deco-choice:focus-visible{outline:2px solid #376fd5;outline-offset:2px}
+html[data-theme=dark] body.writing-mode #writeCustomization .nv-deco-choice{
+ background:#263347;border-color:#42536c;color:#e9efff
+}
+html[data-theme=dark] body.writing-mode #writeCustomization .nv-deco-choice[aria-pressed=true]{
+ background:#293f61;border-color:#729ce6;color:#c6dcff
+}
+@media(prefers-reduced-motion:reduce){
+ body.writing-mode #writeCustomization .nv-tool-decoration:not([hidden]){animation:none!important}
+}
+html[data-nv-motion=off] body.writing-mode #writeCustomization .nv-tool-decoration:not([hidden]){animation:none!important}
