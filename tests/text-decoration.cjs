@@ -8,6 +8,7 @@ assert(app.includes('data-cmd="underline" aria-pressed="false"'),'underline choi
 assert(app.includes('data-cmd="strikeThrough" aria-pressed="false"'),'strikethrough choice');
 assert(app.includes("'S','STRIKE','DEL'"),'strikethrough tags retained when saving');
 assert(app.includes('child.style.textDecorationLine=decoration'),'inline text decoration retained');
+assert(app.indexOf('const decoration=child.style.textDecorationLine')<app.indexOf('[...child.attributes].forEach(a=>child.removeAttribute(a.name))'),'decoration cached before attributes are sanitized');
 assert(app.includes('document.queryCommandState(\'strikeThrough\')'),'active state');
 assert(app.includes("custom.querySelectorAll('[data-cmd]').forEach(b=>b.addEventListener('pointerdown',e=>e.preventDefault()))"),'no selection stealing on tap');
 assert(enh.includes("if(e.target.closest('.nv-deco-toggle,#nvToolDecoration button'))e.preventDefault()"),'trigger keeps selection');
