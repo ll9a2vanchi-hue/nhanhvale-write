@@ -89,3 +89,32 @@ let streakNotified=localStorage.getItem('nv-write-streak-day')||'';
 const watch=()=>{try{const d=JSON.parse(localStorage.getItem('nv-write-v1')||'{}');const day=new Date().toLocaleDateString('en-CA');if((d.logs?.[day]||0)>=(d.settings?.minWords||50)&&streakNotified!==day){streakNotified=day;localStorage.setItem('nv-write-streak-day',day);window.nvCelebrate('streak','Đã đạt mục tiêu viết hôm nay!')}}catch{}};
 const old=window.nvCheckAwards;window.nvCheckAwards=()=>{old();watch()};
 })();
+
+
+// v6.18: bounded motion; never animate or rewrite user-authored text.
+(()=>{
+ const root=document.documentElement;
+ const allowed=()=>root.dataset.nvMotion!=='off'&&!matchMedia('(prefers-reduced-motion: reduce)').matches&&!document.hidden;
+ const io=new IntersectionObserver(entries=>entries.forEach(e=>e.target.classList.toggle('nv-in-view',e.isIntersecting)),{threshold:.1});
+ const seen=new WeakSet();let queued=false,idleTimer,previousShield=null;
+ function pulse(el,name='nv-action-pop'){if(!el||!allowed())return;el.classList.remove(name);void el.offsetWidth;el.classList.add(name);setTimeout(()=>el.classList.remove(name),850)}
+ function enhance(){
+  queued=false;
+  document.querySelectorAll('.nv-topic,.badge,.nv-shield-mini,.nv-xp,.nv-streak-card').forEach((el,i)=>{if(seen.has(el))return;seen.add(el);io.observe(el);el.classList.add('nv-motion-item');el.style.setProperty('--nv-delay',Math.min(i%8,5)*35+'ms')});
+  const shield=document.querySelector('.nv-shield-mini strong');
+  if(shield){const n=Number(shield.textContent.split('/')[0]);if(previousShield!==null&&n>previousShield)pulse(shield.closest('.nv-shield-mini'),'nv-shield-earned');previousShield=n}
+  document.querySelectorAll('.nv-shield-mini>span:first-child,.nv-shield-info .title').forEach(el=>{if(!el.textContent.includes('🛡'))return;const svg='<svg class="nv-shield-icon" viewBox="0 0 24 26" aria-hidden="true"><path d="m12 2 9 4v7c0 5-5 9-9 11C8 22 3 18 3 13V6z" fill="currentColor" fill-opacity=".16" stroke="currentColor" stroke-width="1.8"/><path d="m8 13 3 3 5-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';el.innerHTML=el.innerHTML.replace(/🛡️?/u,svg)});
+  if(!document.body.classList.contains('writing-mode'))document.body.classList.remove('nv-writing-idle');
+ }
+ const observer=new MutationObserver(records=>{
+  for(const r of records)for(const n of r.removedNodes){if(n.nodeType===1){io.unobserve(n);n.querySelectorAll('.nv-motion-item').forEach(el=>io.unobserve(el))}}
+  if(records.every(r=>r.target.parentElement?.closest('[contenteditable],textarea,input,svg')||r.target.nodeType===1&&r.target.closest('[contenteditable],textarea,input,svg')))return;
+  if(!queued){queued=true;requestAnimationFrame(enhance)}
+ });observer.observe(document.querySelector('main'),{childList:true,subtree:true});enhance();
+ document.addEventListener('visibilitychange',()=>root.classList.toggle('nv-paused',document.hidden));
+ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;pulse(b);if(b.id==='copy')pulse(b,'nv-copy-flash');if(b.id==='pin')requestAnimationFrame(()=>pulse(document.querySelector('#pin'),'nv-pin-drop'))});
+ const wake=()=>{document.body.classList.remove('nv-writing-idle');clearTimeout(idleTimer);if(document.body.classList.contains('writing-mode'))idleTimer=setTimeout(()=>{if(!document.querySelector('#writeCustomization [aria-expanded="true"]'))document.body.classList.add('nv-writing-idle')},3200)};
+ document.addEventListener('input',e=>{if(e.target.closest('[contenteditable],#body'))wake()});
+ document.addEventListener('pointerdown',wake,{passive:true});document.addEventListener('keydown',wake);
+ const celebrate=window.nvCelebrate;window.nvCelebrate=(type,label)=>{celebrate?.(type,label);if(type==='streak')pulse(document.querySelector('.nv-streak-card'),'nv-goal-ring');if(type==='award')pulse(document.querySelector('.nv-xp'),'nv-goal-ring')};
+})();
