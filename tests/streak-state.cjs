@@ -7,7 +7,7 @@ const source=src.slice(a,b);
 class FixedDate extends Date{constructor(...args){super(...(args.length?args:[2026,10,3,12,0,0]))}}
 const dateKey=(daysAgo)=>{const d=new FixedDate();d.setDate(d.getDate()-daysAgo);return d.toLocaleDateString('en-CA')};
 const today=dateKey(0),yesterday=dateKey(1),dayBefore=dateKey(2),threeDays=dateKey(3);
-function check(logs,expected,desc){const context={db:{logs,settings:{minWords:50}},Date:FixedDate};vm.createContext(context);vm.runInContext(source+';this.getStreak=streak',context);assert.equal(context.getStreak(),expected,desc)}
+function check(logs,expected,desc){const context={db:{logs,settings:{minWords:50}},Date:FixedDate,today:()=>dateKey(0)};vm.createContext(context);vm.runInContext(source+';this.getStreak=streak',context);assert.equal(context.getStreak(),expected,desc)}
 check({},0,'no activity');
 check({[today]:10},0,'today in progress without previous streak');
 check({[yesterday]:55},1,'yesterday met, today not started');
