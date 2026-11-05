@@ -661,3 +661,14 @@ html[data-theme=dark] body.writing-mode #writeCustomization .nv-deco-choice[aria
  body.writing-mode #writeCustomization .nv-tool-decoration:not([hidden]){animation:none!important}
 }
 html[data-nv-motion=off] body.writing-mode #writeCustomization .nv-tool-decoration:not([hidden]){animation:none!important}
+
+
+/* v6.17.0 — 7-day shield rewards and capped streak protection */
+.nv-shield-mini{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:7px;padding:5px 4px;border-radius:9px;background:#eff6ff;color:#1e40af;font-size:11px;font-weight:700;line-height:1.2;white-space:nowrap}
+.nv-shield-mini strong{font-size:12px;font-weight:850}
+.nv-shield-mini span:last-child{font-weight:600;color:#475569}
+.nv-shield-info .title{margin-bottom:9px}
+.nv-shield-info p{margin:5px 0 8px;line-height:1.5}
+html[data-theme=dark] .nv-shield-mini{background:#172c46;color:#a8d3ff}
+html[data-theme=dark] .nv-shield-mini span:last-child{color:#c8d4e4}
+@media(max-width:380px){.nv-shield-mini{font-size:10px;gap:3px;padding:4px 2px}}

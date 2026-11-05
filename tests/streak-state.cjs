@@ -1,7 +1,7 @@
 // Regression: an unfinished current day must not erase yesterday's completed streak.
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const src=fs.readFileSync('js/app.js','utf8');
-const a=src.indexOf('function streak(){'), b=src.indexOf('const done=()',a);
+const a=src.indexOf('function shieldStats(){'), b=src.indexOf('const done=()',a);
 assert(a>=0&&b>a,'streak function available');
 const source=src.slice(a,b);
 class FixedDate extends Date{constructor(...args){super(...(args.length?args:[2026,10,3,12,0,0]))}}

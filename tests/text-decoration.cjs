@@ -1,4 +1,4 @@
-// v6.16.2 regression: one toolbar button offers two preserved rich-text formats.
+// v6.17.0 regression: one toolbar button offers two preserved rich-text formats.
 const fs=require('node:fs'),assert=require('node:assert/strict');
 const app=fs.readFileSync('js/app.js','utf8'),enh=fs.readFileSync('js/enhancements.js','utf8'),css=fs.readFileSync('css/app.css','utf8');
 assert(app.includes('class="format-button nv-deco-toggle"'),'one combined trigger');
