@@ -8,7 +8,7 @@ body{background:#f4f6f9}
 .btn,.chip,.tabs button{transition:transform .16s ease,background .18s ease,box-shadow .18s ease}
 .btn:active,.chip:active,.tabs button:active{transform:scale(.955)}
 .btn:focus-visible,.chip:focus-visible{outline:3px solid #a5bad3;outline-offset:2px}
-#content{animation:fadeUp .22s ease both}
+#content{animation:none}
 @keyframes fadeUp{from{opacity:.55;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
 .nv-icon{width:19px;height:19px;stroke:currentColor;stroke-width:2.7;fill:none;stroke-linecap:round;stroke-linejoin:round;vertical-align:-4px;flex-shrink:0}
 .metric small .nv-icon{width:17px;height:17px}
@@ -687,7 +687,7 @@ html[data-theme=dark] .badge small{color:#b9c7db}
 html[data-nv-motion=on] body:not(.writing-mode) #xpMount{position:relative;isolation:isolate}
 html[data-nv-motion=on] body:not(.writing-mode) #xpMount::before{content:'';position:absolute;inset:-16px 8%;z-index:-1;pointer-events:none;background:radial-gradient(ellipse,#a087ed30,transparent 70%);animation:nvAurora 9s ease-in-out infinite alternate}
 html[data-nv-motion=on] :is(#add,#nvFirstWrite){box-shadow:0 0 0 2px #8f9df725,0 4px 18px #7388dd30;animation:nvButtonGlow 3s ease-in-out infinite}
-.nv-motion-item.nv-in-view{animation:nvReveal .32s ease-out var(--nv-delay,0ms) both}
+.nv-motion-item.nv-in-view{animation:none}
 .nv-xp-track i,.badge .bar>div{position:relative;overflow:hidden}
 html[data-nv-motion=on] .nv-xp.nv-in-view .nv-xp-track i::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 25%,#ffffff80 50%,transparent 75%);animation:nvSweep 4.5s ease-in-out infinite}
 html[data-nv-motion=on] .nv-shield-mini.nv-in-view{position:relative;overflow:hidden}
@@ -713,5 +713,8 @@ html.nv-paused *,html.nv-paused *::before,html.nv-paused *::after{animation-play
 html[data-nv-motion=off] :is(.nv-motion-item,.nv-action-pop,.nv-copy-flash,.nv-pin-drop,.nv-shield-earned,.nv-goal-ring,#saveLabel),html[data-nv-motion=off] #xpMount::before{animation:none!important;translate:none!important}
 html[data-nv-motion=off] .nv-writing-idle :is(.write-toolbar,#writeCustomization){opacity:1!important}
 @media(prefers-reduced-motion:reduce){html :is(.nv-motion-item,.nv-action-pop,.nv-copy-flash,.nv-pin-drop,.nv-shield-earned,.nv-goal-ring,#saveLabel,#add,#nvFirstWrite),html #xpMount::before,html .nv-xp-track i::after,html .nv-shield-mini::after{animation:none!important;translate:none!important}html .nv-writing-idle :is(.write-toolbar,#writeCustomization){opacity:1!important}html .nv-topic:hover,html .badge:hover .nv-medallion{transform:none!important}}
-html[data-nv-motion=on] body:not(.writing-mode) #content{animation:nvReveal .25s ease-out}
+html[data-nv-motion=on] body:not(.writing-mode) #content{animation:none}
 @media(prefers-reduced-motion:reduce){html body:not(.writing-mode) #content{animation:none!important}}
+
+/* Tab navigation stays still; ambient and action effects remain enabled. */
+#tabs button,#tabs button:active{transform:none!important;animation:none!important}

@@ -112,7 +112,7 @@ const old=window.nvCheckAwards;window.nvCheckAwards=()=>{old();watch()};
   if(!queued){queued=true;requestAnimationFrame(enhance)}
  });observer.observe(document.querySelector('main'),{childList:true,subtree:true});enhance();
  document.addEventListener('visibilitychange',()=>root.classList.toggle('nv-paused',document.hidden));
- document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;pulse(b);if(b.id==='copy')pulse(b,'nv-copy-flash');if(b.id==='pin')requestAnimationFrame(()=>pulse(document.querySelector('#pin'),'nv-pin-drop'))});
+ document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.closest('#tabs'))return;pulse(b);if(b.id==='copy')pulse(b,'nv-copy-flash');if(b.id==='pin')requestAnimationFrame(()=>pulse(document.querySelector('#pin'),'nv-pin-drop'))});
  const wake=()=>{document.body.classList.remove('nv-writing-idle');clearTimeout(idleTimer);if(document.body.classList.contains('writing-mode'))idleTimer=setTimeout(()=>{if(!document.querySelector('#writeCustomization [aria-expanded="true"]'))document.body.classList.add('nv-writing-idle')},3200)};
  document.addEventListener('input',e=>{if(e.target.closest('[contenteditable],#body'))wake()});
  document.addEventListener('pointerdown',wake,{passive:true});document.addEventListener('keydown',wake);
