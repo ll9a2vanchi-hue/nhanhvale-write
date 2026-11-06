@@ -46,7 +46,10 @@ const seed=Array.from({length:750},(_,n)=>({
   await page.locator('#settingsBtn').click();
   await page.locator('#setting-6 summary').click();
   await page.locator('#nvShadowCreate').click();
-  await page.waitForFunction(()=>document.querySelector('#nvShadowStatus')?.textContent?.startsWith('✓'),null,{timeout:15000});
+  await page.waitForFunction(()=>!document.querySelector('#nvShadowStatus')?.textContent?.includes('Bản dự phòng được giữ'),null,{timeout:15000});
+  const shadowText=await page.locator('#nvShadowStatus').textContent();
+  console.log('Shadow creation status:',shadowText);
+  assert(shadowText.startsWith('✓'),'Shadow write failed: '+shadowText+'; page errors: '+errors.join('; '));
   const status=await page.evaluate(async()=>{
    const snap=await window.nvShadowVault.latest();
    return {count:JSON.parse(snap.json).topics.length,owner:snap.owner,records:(await window.nvShadowVault.list()).length};
