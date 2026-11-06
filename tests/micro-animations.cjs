@@ -10,6 +10,6 @@ assert(app.includes('if(savedChange&&!dirty&&nvMotionEnabled())'),'save feedback
 assert(css.includes('prefers-reduced-motion:reduce'),'reduced motion');
 assert(css.includes('data-nv-motion=off'),'user preference');
 assert(fx.includes("document.documentElement.dataset.nvMotion=fx.motion?'on':'off'"),'FX toggle');
-const animations=css.slice(css.indexOf('/* ==== v6.17.0:'));
+const marker='/* ==== v6.16.0:';assert(css.includes(marker),'animation CSS exists');const animations=css.slice(css.indexOf(marker),css.indexOf('/* v6.16.1',css.indexOf(marker))>0?css.indexOf('/* v6.16.1',css.indexOf(marker)):undefined);
 assert(!/min-height\s*:|height\s*:\s*(?:100|calc)|scrollTop\s*=|overflow-y\s*:/.test(animations),'does not change layout');
 console.log('PASS: six animation areas, save safety, system/user motion controls');

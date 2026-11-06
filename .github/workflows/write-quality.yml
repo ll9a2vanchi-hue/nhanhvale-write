@@ -1,0 +1,46 @@
+name: Nhanhvale Write quality checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Parse JavaScript
+        run: |
+          set -eu
+          for file in js/*.js tests/*.cjs; do node --check "$file"; done
+      - name: Backup, CSP and UI regression tests
+        run: |
+          set -eu
+          node tests/v614.cjs
+          node tests/data-safety.cjs
+          node tests/search-keyboard.cjs
+          node tests/icon-crisp.cjs
+          node tests/micro-animations.cjs
+          node tests/release-contract.cjs
+      - name: Editor, review and streak regression tests
+        run: |
+          set -eu
+          node tests/editor-structure.cjs
+          node tests/editor-format.cjs
+          node tests/text-decoration.cjs
+          node tests/editor-regression.cjs
+          node tests/shields.cjs
+          node tests/streak-state.cjs
+          node tests/v612.cjs
+          node tests/v613.cjs
+          node tests/ui-v611.cjs

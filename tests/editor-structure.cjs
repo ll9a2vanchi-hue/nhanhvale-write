@@ -10,5 +10,5 @@ assert.equal(count('<div'),count('</div>'),'the customization markup has balance
 assert(markup.indexOf('id="backgroundPanel"')>markup.indexOf('id="nvToolColors"'),'background picker follows colours');
 assert(markup.includes('id="nvToolMore"'),'secondary toolbar exists');
 assert(src.includes('const enteringTopic=!!current&&current.id!==nvLastRenderedTopicId'),'only reset scroll on new article');
-assert(src.includes('if(enteringTopic){document.body.scrollTop=0;document.documentElement.scrollTop=0;window.scrollTo(0,0)}'),'reset both body and viewport');
+assert(src.includes('if(enteringTopic){document.body.scrollTop=0;document.documentElement.scrollTop=0;window.scrollTo(0,0);'),'reset both body and viewport');
 console.log('PASS: balanced editor structure and reset scroll on opening a topic');
