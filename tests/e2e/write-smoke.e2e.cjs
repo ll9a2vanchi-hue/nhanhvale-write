@@ -49,7 +49,7 @@ const seed=Array.from({length:750},(_,n)=>({
   await page.waitForFunction(()=>!document.querySelector('#nvShadowStatus')?.textContent?.includes('Bản dự phòng được giữ'),null,{timeout:15000});
   const shadowText=await page.locator('#nvShadowStatus').textContent();
   console.log('Shadow creation status:',shadowText);
-  assert(shadowText.startsWith('✓'),'Shadow write failed: '+shadowText+'; page errors: '+errors.join('; '));
+  assert(/Đã lưu bản dự phòng/.test(shadowText),'Shadow write failed: '+shadowText+'; page errors: '+errors.join('; '));
   const status=await page.evaluate(async()=>{
    const snap=await window.nvShadowVault.latest();
    return {count:JSON.parse(snap.json).topics.length,owner:snap.owner,records:(await window.nvShadowVault.list()).length};
