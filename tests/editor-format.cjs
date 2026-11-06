@@ -2,7 +2,7 @@ const fs=require('fs'),vm=require('vm'),assert=require('assert');
 const src=fs.readFileSync('js/app.js','utf8');
 const buttons=['bold','italic'].map(cmd=>({dataset:{cmd},attrs:{},classes:new Set(),setAttribute(k,v){this.attrs[k]=v},classList:{toggle(){}}}));
 const states={bold:false,italic:false};let inside=true;
-const context={getSelection:()=>({rangeCount:1,anchorNode:{},focusNode:{}}),rich:{contains:()=>inside},custom:{querySelectorAll:()=>buttons},document:{queryCommandState:cmd=>states[cmd]}};
+const context={getSelection:()=>({rangeCount:1,anchorNode:{},focusNode:{}}),rich:{contains:()=>inside},custom:{querySelectorAll:()=>buttons,querySelector:()=>({classList:{toggle(){}}})},document:{queryCommandState:cmd=>states[cmd]}};
 vm.createContext(context);const code=src.slice(src.indexOf('const syncFormatState=()=>'),src.indexOf("document.addEventListener('selectionchange',syncFormatState)"));
 vm.runInContext(code+';globalThis.sync=syncFormatState',context);
 context.sync();assert.deepEqual(buttons.map(b=>b.attrs['aria-pressed']),['false','false']);
