@@ -1,7 +1,7 @@
 // v6.12.0 static checks (no dependencies): node tests/v612.cjs
 const fs=require('fs'),assert=require('assert');
 const src=require('./_src.cjs'),sw=fs.readFileSync('sw.js','utf8'),vc=JSON.parse(fs.readFileSync('vercel.json','utf8'));
-assert.deepEqual([...src.matchAll(/NV_VERSION\s*=\s*'([^']+)'/g)].map(m=>m[1]),['6.20.0']);assert(/nv-write-v57/.test(sw));
+assert.deepEqual([...src.matchAll(/NV_VERSION\s*=\s*'([^']+)'/g)].map(m=>m[1]),['6.21.0']);assert(/nv-write-v58/.test(sw));
 // 1. multi-tab: save merges first, then notifies; tabs listen on BroadcastChannel + storage
 assert(src.includes("window.nvMergeDisk?.()")&&src.indexOf("window.nvMergeDisk?.()")<src.indexOf("localStorage.setItem(KEY,nvJson)"),'save merges other tabs before persistence');
 assert(src.includes("new BroadcastChannel('nv-write-sync')")&&src.includes("window.addEventListener('storage'"));

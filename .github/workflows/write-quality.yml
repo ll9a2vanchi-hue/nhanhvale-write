@@ -32,6 +32,7 @@ jobs:
           node tests/icon-crisp.cjs
           node tests/micro-animations.cjs
           node tests/release-contract.cjs
+          node tests/shadow-vault.cjs
       - name: Editor, review and streak regression tests
         run: |
           set -eu

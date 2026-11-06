@@ -732,3 +732,10 @@ html[data-theme="dark"] [data-open][role="button"]:focus-visible{outline-color:#
 #nvTopicResults{min-width:0}
 #nvStorageDetails{overflow-wrap:anywhere;margin:10px 0 0}
 @media(max-width:370px){.nv-topic-filters .row{gap:6px}.nv-topic-filters #filter{min-width:104px;max-width:44%}}
+
+/* v6.21.0 — manual, non-destructive IndexedDB backup controls */
+.nv-shadow-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.nv-shadow-actions>.btn{min-height:44px;flex:1 1 210px}
+.nv-recovery{max-width:740px;margin:20px auto;line-height:1.55}
+.nv-recovery .btn{margin:4px 7px 4px 0;min-height:44px}
+#nvRecoverInfo,#nvShadowStatus{overflow-wrap:anywhere}

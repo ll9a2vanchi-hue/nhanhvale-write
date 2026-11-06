@@ -1,0 +1,14 @@
+const assert=require('node:assert/strict'),fs=require('node:fs');
+const app=fs.readFileSync('js/app.js','utf8'),vault=fs.readFileSync('js/shadow-vault.js','utf8'),html=fs.readFileSync('index.html','utf8'),sw=fs.readFileSync('sw.js','utf8');
+const src=fs.readFileSync('js/data-safety.js','utf8');
+assert(html.indexOf('js/shadow-vault.js')<html.indexOf('js/app.js'),'shadow loaded first');
+assert(sw.includes("'/js/shadow-vault.js'"),'offline script');
+assert(app.includes('window.nvShadowVault?.schedule(()=>JSON.stringify(nvBuildBackup()))'),'snapshot after saved main data');
+assert(app.includes('function nvBuildBackup()'),'exports full state');
+assert(app.includes('id="nvRecoverShadow"'),'emergency shadow export');
+assert(app.includes('id="nvShadowCreate"')&&app.includes('id="nvShadowExport"'),'manual backup tools');
+assert(!vault.includes('localStorage.setItem('),'shadow vault never writes main data');
+assert(!vault.includes('objectStore(STORE).clear'),'vault never clears backups');
+assert(vault.includes('const NAME=')&&vault.includes('MAX=3'),'bounded snapshot history');
+assert(src.includes('validateBackup'),'snapshots validated before export');
+console.log('PASS: non-authoritative shadow vault, safe manual export, CSP load, offline cache');

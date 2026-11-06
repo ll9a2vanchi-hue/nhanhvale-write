@@ -16,3 +16,10 @@ GitHub Actions checks every push or PR targeting main. Unit tests check JS synta
 10. Production: confirm Vercel READY status and commit SHA; verify offline PWA reload and Android maskable icon.
 
 **Limits:** unit checks are not screenshots or real-device tests. Automatic Vercel Git deployments are not blocked by this workflow unless a required deployment check or branch protection rule is configured.
+
+## v6.21.0 — IndexedDB shadow (non-destructive)
+- The original localStorage remains authoritative; IndexedDB holds up to three most recent full JSON snapshots per local account scope.
+- A snapshot is queued after a successful save, asynchronously, without blocking typing. The manual Create button forces an immediate snapshot.
+- Export from Settings → Sao lưu và khôi phục or from the corrupted-data recovery screen. The export only downloads JSON and does not restore/overwrite the app.
+- Clearing browser site data deletes BOTH primary data and local IndexedDB snapshots; export JSON outside the browser before clearing site data.
+- Never claim device-specific Android tests passed solely because a CI unit test passed.
