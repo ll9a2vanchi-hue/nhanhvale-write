@@ -65,3 +65,10 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Verify real Chromium UI and shadow recovery
         run: node tests/e2e/write-smoke.e2e.cjs
+      - name: Verify two-tab and fake cloud synchronization
+        run: |
+          node tests/serve-with-headers.cjs . 8010 >/tmp/write-e2e-server.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill $SERVER_PID 2>/dev/null || true' EXIT
+          sleep 1
+          BASE=http://127.0.0.1:8010/ node tests/e2e/multitab-aux.e2e.cjs
