@@ -718,3 +718,17 @@ html[data-nv-motion=on] body:not(.writing-mode) #content{animation:none}
 
 /* Tab navigation stays still; ambient and action effects remain enabled. */
 #tabs button,#tabs button:active{transform:none!important;animation:none!important}
+
+/* v6.19.0 — accessible cards and stable live search on phone + desktop. */
+[data-open][role="button"]{cursor:pointer}
+[data-open][role="button"]:focus-visible{
+ outline:3px solid #3679da!important;outline-offset:3px;border-radius:9px
+}
+html[data-theme="dark"] [data-open][role="button"]:focus-visible{outline-color:#a2c5ff!important}
+.nv-topic-filters #search{min-height:44px}
+.nv-topic-filters #filter{min-height:44px}
+.nv-group-main small,.nv-group-child small,.nv-supplement-list-item small{font-size:12px;line-height:1.45}
+.nv-tree-toggle,.nv-group-toggle{min-width:44px;min-height:44px}
+#nvTopicResults{min-width:0}
+#nvStorageDetails{overflow-wrap:anywhere;margin:10px 0 0}
+@media(max-width:370px){.nv-topic-filters .row{gap:6px}.nv-topic-filters #filter{min-width:104px;max-width:44%}}
