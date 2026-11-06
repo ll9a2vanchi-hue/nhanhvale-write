@@ -23,3 +23,7 @@ GitHub Actions checks every push or PR targeting main. Unit tests check JS synta
 - Export from Settings → Sao lưu và khôi phục or from the corrupted-data recovery screen. The export only downloads JSON and does not restore/overwrite the app.
 - Clearing browser site data deletes BOTH primary data and local IndexedDB snapshots; export JSON outside the browser before clearing site data.
 - Never claim device-specific Android tests passed solely because a CI unit test passed.
+
+## Browser regression — v6.21.0
+GitHub Actions now runs a disposable Chromium mobile smoke test: seed 750 topics, search and keyboard navigation, create an IndexedDB backup, corrupt disposable localStorage data, export recovery JSON and confirm no silent primary overwrite.
+This does not represent a real Android IME/hardware test or live Supabase two-device conflict test.

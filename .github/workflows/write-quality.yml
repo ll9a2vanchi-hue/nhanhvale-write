@@ -45,3 +45,23 @@ jobs:
           node tests/v612.cjs
           node tests/v613.cjs
           node tests/ui-v611.cjs
+
+  browser-smoke:
+    name: Disposable mobile browser smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Node runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Install pinned Playwright
+        run: |
+          npm install --no-save --no-package-lock --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Verify real Chromium UI and shadow recovery
+        run: node tests/e2e/write-smoke.e2e.cjs
