@@ -5,7 +5,7 @@ const html=rd('index.html'),sw=rd('sw.js'),csp=JSON.parse(rd('vercel.json')).hea
 assert(!/<script(?![^>]*\bsrc=)[^>]*>/i.test(html),'no inline <script>');assert(!/<style[\s>]/i.test(html),'no inline <style>');
 assert(!/\son[a-z]+\s*=/i.test(html)&&!/javascript:/i.test(html),'no inline handlers');
 const files=[...html.matchAll(/<(?:script[^>]*\bsrc|link[^>]*\bhref)="([^"]+\.(?:js|css))"/g)].map(m=>'/'+m[1].replace(/^\//,''));
-assert.deepEqual(files,['/js/version.js','/css/app.css','/js/app.js','/js/icons-fx.js','/js/enhancements.js'],'load order');
+assert.deepEqual(files,['/js/version.js','/js/data-safety.js','/css/app.css','/js/app.js','/js/icons-fx.js','/js/enhancements.js'],'load order');
 for(const f of files)assert(fs.existsSync(path.join(R,f)),f+' exists');
 // 2. Service worker precaches every app file (network-first SW only falls back to precached URLs → offline reload).
 for(const f of [...files,'/vendor/supabase-js-2.95.0.js'])assert(sw.includes("'"+f+"'"),'precache '+f);assert(/nv-write-v52/.test(sw));

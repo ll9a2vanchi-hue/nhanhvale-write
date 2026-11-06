@@ -1,0 +1,11 @@
+const assert=require('node:assert/strict'),safe=require('../js/data-safety.js');
+const v={topics:[{id:'a',title:'A'}],logs:{'2026-11-01':25}};
+safe.validateBackup(v);assert(safe.validLocalState(v));
+assert.equal(safe.mergeDailyLogs({'2026-11-01':70},{'2026-11-01':20})['2026-11-01'],70);
+assert.equal(safe.mergeDailyLogs({'2026-11-01':70},{'2026-11-01':90})['2026-11-01'],90);
+for(const x of [null,{}, {topics:[{id:'a" onmouseover="x',title:'bad'}]}, {topics:[],logs:{'2026-11-01':-1}}])assert.throws(()=>safe.validateBackup(x));
+const p=safe.mergeXP({events:[{id:'one',words:8}],total:18,high:{a:8}},{events:[{id:'one',words:8},{id:'two',words:3}],total:25,high:{a:11}});
+assert.equal(p.events.length,2);assert(p.total>=25);assert.equal(p.high.a,11);
+assert.equal(safe.mergeXP(p,{events:[{id:'two',words:3}],total:25,high:{a:11}}).events.length,2);
+assert.throws(()=>safe.mergeXP({cloud:{user:'a'}},{cloud:{user:'b'}}));
+console.log('PASS: backup validation, nondecreasing daily logs, XP merge, malformed state checks');
