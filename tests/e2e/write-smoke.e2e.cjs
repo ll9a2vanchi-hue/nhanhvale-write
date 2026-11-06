@@ -42,6 +42,7 @@ const seed=Array.from({length:750},(_,n)=>({
   await page.waitForSelector('#body');
   assert.equal(await page.locator('#title').inputValue(),'Bài đặc biệt cần tìm','keyboard opens correct topic');
 
+  await page.locator('#back').click();
   await page.locator('#settingsBtn').click();
   await page.locator('#setting-6 summary').click();
   await page.locator('#nvShadowCreate').click();
