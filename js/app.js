@@ -215,14 +215,14 @@ function render(){if(nvInvalidLocalRaw!==null){
  }}
  return;
 }window.nvEditorCleanup?.();window.nvEditorCleanup=null;window.nvDockCleanup?.();window.nvDockCleanup=null;const view=nvView(),key=JSON.stringify(view);const enteringTopic=!!current&&current.id!==nvLastRenderedTopicId;nvLastRenderedTopicId=current?.id||null;if(!nvHistoryReady){history.replaceState({...history.state,nvWriteView:view},'');nvHistoryReady=true;nvLastView=key}else if(!nvRestoringHistory&&key!==nvLastView){history.pushState({nvWriteView:view},'');nvLastView=key}else if(nvRestoringHistory)nvLastView=key;refreshXP();document.body.classList.toggle('nv-dedicated-page',!current&&(tab==='settings'||tab==='account'));document.body.classList.toggle('writing-mode',!!current);renderMetrics();$('#tabs').querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));$('#content').innerHTML=current?editor(current):tab==='home'?home():tab==='topics'?topics():tab==='review'?review():tab==='awards'?awardsView():tab==='account'?account():settings();bind();if(tab==='account')refreshAccount();if(enteringTopic){document.body.scrollTop=0;document.documentElement.scrollTop=0;window.scrollTo(0,0);if(nvMotionEnabled())document.querySelector('#content .write-document')?.classList.add('nv-topic-enter')}}
-function random(reviewMode){const pool=active().filter(t=>t.rating!=='none'&&(reviewMode?!t.no_review&&autoStatus(t)==='done':autoStatus(t)!=='done'));const due=reviewMode?pool.filter(isDue):[];const arr=due.length?due:pool;if(!arr.length){alert(reviewMode?'Chưa có bài đã hoàn thành để ôn tập ngẫu nhiên.':'Không có bài chưa hoàn thành phù hợp để viết ngẫu nhiên.');return}current=arr[Math.floor(Math.random()*arr.length)];render()}
+function random(reviewMode){const pool=active().filter(t=>t.rating!=='none'&&(reviewMode?!t.no_review&&autoStatus(t)==='done':autoStatus(t)!=='done'));const due=reviewMode?pool.filter(isDue):[];const arr=due.length?due:pool;if(!arr.length){alert(reviewMode?'Chưa có bài đã hoàn thành để ôn tập ngẫu nhiên.':'Không có bài chưa hoàn thành phù hợp để viết ngẫu nhiên.');return}current=arr[Math.floor(Math.random()*arr.length)];render();window.nvRandomTransition?.(reviewMode?'review':'write',current.title)}
 function resizeTitle(el){if(!el)return;el.style.height='auto';el.style.height=Math.max(el.scrollHeight,44)+'px'}
 
 // Bind only the list that was updated. Keyboard and pointer users can open each card.
 let nvTopicSearchFrame=0;
 function nvBindTopicResults(root){
  root.querySelectorAll('[data-open]').forEach(el=>{
-  const open=()=>{const t=db.topics.find(t=>t.id===el.dataset.open&&!t.deleted);if(!t)return;current=t;render()};
+  const open=()=>{const t=db.topics.find(t=>t.id===el.dataset.open&&!t.deleted);if(!t)return;current=t;render();if(tab==='review')window.nvRandomTransition?.('review',t.title)};
   if(!['BUTTON','A'].includes(el.tagName)){
    el.setAttribute('role','button');el.tabIndex=0;
    const t=db.topics.find(t=>t.id===el.dataset.open);

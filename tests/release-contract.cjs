@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const read=p=>fs.readFileSync(p,'utf8'),app=read('js/app.js'),html=read('index.html'),sw=read('sw.js'),ver=read('js/version.js'),workflow=read('.github/workflows/write-quality.yml');
-assert(ver.includes("'6.21.0'"),'version');
-assert(sw.includes("nv-write-v58"),'service worker cache');
+assert(ver.includes("'6.22.0'"),'version');
+assert(sw.includes("nv-write-v59"),'service worker cache');
 assert(html.includes('js/data-safety.js'),'safe helper');assert(html.includes('js/shadow-vault.js'),'separate backup script');assert(sw.includes('js/shadow-vault.js'),'offline shadow script');
 assert(app.includes('xp:{...xp},backupVersion:2'),'XP backup');
 assert(app.includes('window.nvDataSafety.validateBackup(JSON.parse'),'backup validation');

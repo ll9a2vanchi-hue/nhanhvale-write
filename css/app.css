@@ -739,3 +739,42 @@ html[data-theme="dark"] [data-open][role="button"]:focus-visible{outline-color:#
 .nv-recovery{max-width:740px;margin:20px auto;line-height:1.55}
 .nv-recovery .btn{margin:4px 7px 4px 0;min-height:44px}
 #nvRecoverInfo,#nvShadowStatus{overflow-wrap:anywhere}
+
+
+/* v6.22 - light, fixed, GPU-friendly card shuffle and notebook flip. */
+.nv-pick-overlay{position:fixed;inset:0;z-index:9980;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;padding:24px 16px max(24px,env(safe-area-inset-bottom));background:rgba(247,250,255,.89);color:#263750;pointer-events:none;text-align:center;animation:nvPickFade .16s ease-out both}
+.nv-pick-scene{position:relative;width:218px;height:176px;perspective:650px;isolation:isolate}
+.nv-pick-card{position:absolute;top:8px;left:37px;width:144px;height:157px;border:1px solid #c9d5ed;border-radius:15px;background:repeating-linear-gradient(to bottom,#fff 0 26px,#dce6f8 27px 29px,#fff 30px 42px);box-shadow:0 12px 24px #34548a28;backface-visibility:hidden;will-change:transform,opacity}
+.nv-pick-card.a{animation:nvPickShuffleA .7s cubic-bezier(.2,.75,.3,1) both}
+.nv-pick-card.b{animation:nvPickShuffleB .7s cubic-bezier(.2,.75,.3,1) both}
+.nv-pick-card.c{animation:nvPickShuffleC .7s cubic-bezier(.2,.75,.3,1) both}
+.nv-pick-label{display:grid;gap:5px;max-width:min(330px,90vw);animation:nvPickReveal .65s ease-out both}
+.nv-pick-label span{font-size:12px;letter-spacing:.07em;color:#5574a9;font-weight:750}
+.nv-pick-label strong{font-size:17px;line-height:1.35;max-width:310px;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow-wrap:anywhere}
+.nv-pick-label small{font-size:12px;color:#697b96}
+.nv-pick-skip{pointer-events:auto;touch-action:manipulation;min-height:44px;min-width:100px;border:1px solid #a9bad6;border-radius:22px;background:#fff;color:#324d7a;font:600 13px system-ui,sans-serif;padding:10px 20px;cursor:pointer}
+.nv-pick-book{display:none;position:absolute;top:26px;left:19px;width:180px;height:126px;filter:drop-shadow(0 8px 12px #34548a25)}
+.nv-pick-left,.nv-pick-right{position:absolute;top:0;width:50%;height:100%;border:1px solid #b9c7e1;background:repeating-linear-gradient(to bottom,#fdfdfd 0 15px,#e6ecf8 16px 17px)}
+.nv-pick-left{left:0;border-radius:8px 3px 3px 8px;transform:skewY(-3deg)}
+.nv-pick-right{right:0;border-radius:3px 8px 8px 3px;transform:skewY(3deg)}
+.nv-pick-page{position:absolute;top:0;left:50%;width:50%;height:100%;background:repeating-linear-gradient(to bottom,#fff 0 15px,#d9e5f7 16px 17px);border:1px solid #c1cde2;border-radius:2px 8px 8px 2px;transform-origin:left center;backface-visibility:hidden;will-change:transform}
+.nv-pick-page.p1{animation:nvPickPage .7s .04s ease-in-out both}
+.nv-pick-page.p2{animation:nvPickPage .65s .14s ease-in-out both}
+.nv-pick-page.p3{animation:nvPickPage .6s .25s ease-in-out both}
+.nv-pick-review .nv-pick-card{display:none}
+.nv-pick-review .nv-pick-book{display:block;animation:nvPickBook .76s ease-out both}
+@keyframes nvPickFade{from{opacity:0}to{opacity:1}}
+@keyframes nvPickShuffleA{0%{transform:translate(-20px,5px) rotate(-13deg)}35%{transform:translate(34px,-9px) rotate(13deg)}75%,100%{transform:translate(-18px,7px) rotate(-10deg)}}
+@keyframes nvPickShuffleB{0%{transform:translate(19px,4px) rotate(12deg)}38%{transform:translate(-30px,-10px) rotate(-15deg)}80%,100%{transform:translate(15px,7px) rotate(7deg)}}
+@keyframes nvPickShuffleC{0%{transform:translate(0,7px) scale(.94)}35%{transform:translate(0,-19px) rotate(-6deg) scale(.95)}78%,100%{transform:translate(0,-11px) scale(1.06)}}
+@keyframes nvPickPage{0%,10%{transform:rotateY(0)}80%,100%{transform:rotateY(-170deg)}}
+@keyframes nvPickBook{0%{transform:translateY(10px) scale(.95);opacity:.65}55%,100%{transform:translateY(0);opacity:1}}
+@keyframes nvPickReveal{0%,40%{opacity:0;transform:translateY(7px)}100%{opacity:1;transform:translateY(0)}}
+html[data-theme=dark] .nv-pick-overlay{background:rgba(18,25,38,.92);color:#ecf2ff}
+html[data-theme=dark] .nv-pick-label span{color:#a9c3f0}
+html[data-theme=dark] .nv-pick-label small{color:#a8b8cf}
+html[data-theme=dark] .nv-pick-skip{background:#26364c;color:#f2f6fd;border-color:#50627f}
+html[data-nv-motion=off] .nv-pick-overlay{display:none}
+@media(prefers-reduced-motion:reduce){.nv-pick-overlay{display:none!important}}
+@media(max-width:390px){.nv-pick-scene{transform:scale(.88);margin:-11px 0}.nv-pick-label strong{font-size:16px}}
+
