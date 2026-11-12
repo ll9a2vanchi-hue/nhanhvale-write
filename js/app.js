@@ -491,7 +491,7 @@ rich.addEventListener('input',syncFormatState);
 rich.addEventListener('focus',syncFormatState);
 syncFormatState();
 const applyFormat=(cmd,value)=>{rich.focus({preventScroll:true});document.execCommand(cmd,false,value||null);syncFormatState();rich.dispatchEvent(new Event('input',{bubbles:true}))};
-custom.querySelectorAll('[data-cmd],#commentAdd').forEach(b=>b.addEventListener('pointerdown',e=>e.preventDefault()));
+custom.querySelectorAll('[data-cmd]').forEach(b=>b.addEventListener('pointerdown',e=>e.preventDefault()));custom.querySelector('#commentAdd')?.addEventListener('pointerdown',e=>e.preventDefault());
 custom.querySelectorAll('[data-ink],[data-mark]').forEach(b=>b.addEventListener('pointerdown',e=>e.preventDefault()));
 custom.querySelectorAll('[data-cmd]').forEach(b=>b.onclick=()=>applyFormat(b.dataset.cmd));
 custom.querySelectorAll('[data-ink]').forEach(b=>b.onclick=()=>applyFormat('foreColor',b.dataset.ink));
