@@ -125,11 +125,110 @@ function awardsView(){const shield=shieldStats();return `<div class="card nv-shi
 function related(t){return links.filter(l=>!l.deleted&&(l.a===t.id||l.b===t.id)).map(l=>({...l,other:db.topics.find(x=>x.id===(l.a===t.id?l.b:l.a))})).filter(l=>l.other&&!l.other.deleted)}
 function linkSection(t){const arr=related(t),supplements=arr.filter(l=>l.type==='supplement'&&l.a===t.id),parents=arr.filter(l=>l.type==='supplement'&&l.b===t.id),others=arr.filter(l=>l.type==='related');const card=(l,kind)=>`<div class="related-item ${kind==='supplement'?'nv-supplement-item':'nv-related-item'}"><button class="related-open" data-related-open="${l.other.id}"><span class="related-kind">${kind==='supplement'?'↳ BÀI BỔ SUNG':kind==='parent'?'↰ BÀI CHÍNH':'↗ BÀI LIÊN QUAN'}</span><span>${esc(l.other.title)}</span><small>${count(l.other.content).toLocaleString('vi-VN')} chữ · ${autoStatus(l.other)==='done'?'Hoàn thành':autoStatus(l.other)==='draft'?'Đang viết':'Chưa viết'}</small></button><button class="related-unlink" data-unlink="${l.id}" title="Gỡ liên kết, không xóa bài" aria-label="Gỡ liên kết">×</button></div>`;return `<section class="related-section"><div class="related-head"><strong>↗ Bài viết liên kết</strong><span class="hint">${supplements.length} bổ sung · ${others.length} liên quan</span></div>${parents.length?`<div class="nv-parent-group"><div class="nv-related-label">BÀI VIẾT CHÍNH</div>${parents.map(l=>card(l,'parent')).join('')}</div>`:''}${supplements.length?`<div class="nv-supplement-group"><div class="nv-related-label">↳ BÀI BỔ SUNG · ${supplements.reduce((n,l)=>n+count(l.other.content),0).toLocaleString('vi-VN')} chữ</div>${supplements.slice(0,3).map(l=>card(l,'supplement')).join('')}${supplements.length>3?`<div class="nv-extra-supplements" hidden>${supplements.slice(3).map(l=>card(l,'supplement')).join('')}</div><button type="button" id="moreSupplements" class="related-add outline">Xem thêm ${supplements.length-3} bài bổ sung</button>`:''}</div>`:''}${others.length?`<div class="nv-related-group"><div class="nv-related-label">↗ BÀI LIÊN QUAN</div>${others.map(l=>card(l,'related')).join('')}</div>`:''}<div class="related-actions"><button id="relatedNew" class="related-add">+ Viết bài bổ sung</button><button id="relatedExisting" class="related-add outline">↗ Liên kết bài có sẵn</button></div></section>`}
 const pastelColors=[['Trắng','#ffffff'],['Kem','#fff9eb'],['Vàng','#fff7d9'],['Xanh lá','#ecf7ed'],['Xanh dương','#edf5ff'],['Tím','#f3edff'],['Hồng','#fff0f4'],['Xám','#f3f5f7']];
-const safeRich=html=>{const box=new DOMParser().parseFromString('<!doctype html><body>'+String(html??''),'text/html').body;box.querySelectorAll('script,style,iframe,frame,frameset,object,embed,svg,math,form,input,button,textarea,select,template,noscript,link,meta,base,title').forEach(x=>x.remove());const allowed=new Set(['B','STRONG','I','EM','U','S','STRIKE','DEL','SPAN','DIV','P','BR','FONT','UL','OL','LI','HR']);const walk=node=>{[...node.children].forEach(child=>{if(!allowed.has(child.tagName)){walk(child);child.replaceWith(...child.childNodes);return}const decoration=child.style.textDecorationLine,color=child.style.color,background=child.style.backgroundColor,fontColor=child.tagName==='FONT'?(child.getAttribute('color')||'').trim():'';[...child.attributes].forEach(a=>child.removeAttribute(a.name));if(/^#[0-9a-f]{3,8}$/i.test(fontColor))child.setAttribute('color',fontColor);if(color&&/^rgb\([0-9, ]+\)$/.test(color))child.style.color=color;if(background&&/^rgb\([0-9, ]+\)$/.test(background))child.style.backgroundColor=background;if(/^(?:underline|line-through)(?: (?:underline|line-through))?$/.test(decoration))child.style.textDecorationLine=decoration;walk(child)})};walk(box);return box.innerHTML};
+const safeRich=html=>{const box=new DOMParser().parseFromString('<!doctype html><body>'+String(html??''),'text/html').body;box.querySelectorAll('.nv-comment-actions').forEach(x=>x.remove());box.querySelectorAll('script,style,iframe,frame,frameset,object,embed,svg,math,form,input,button,textarea,select,template,noscript,link,meta,base,title').forEach(x=>x.remove());const allowed=new Set(['B','STRONG','I','EM','U','S','STRIKE','DEL','SPAN','DIV','P','BR','FONT','UL','OL','LI','HR']);const walk=node=>{[...node.children].forEach(child=>{if(!allowed.has(child.tagName)){walk(child);child.replaceWith(...child.childNodes);return}const isComment=child.tagName==='DIV'&&child.classList.contains('nv-comment'),isCommentText=child.tagName==='DIV'&&child.classList.contains('nv-comment-text')&&child.parentElement?.classList.contains('nv-comment');const decoration=child.style.textDecorationLine,color=child.style.color,background=child.style.backgroundColor,fontColor=child.tagName==='FONT'?(child.getAttribute('color')||'').trim():'';[...child.attributes].forEach(a=>child.removeAttribute(a.name));if(isComment){child.className='nv-comment';child.contentEditable='false'}if(isCommentText){child.className='nv-comment-text';child.contentEditable='true'}if(/^#[0-9a-f]{3,8}$/i.test(fontColor))child.setAttribute('color',fontColor);if(color&&/^rgb\([0-9, ]+\)$/.test(color))child.style.color=color;if(background&&/^rgb\([0-9, ]+\)$/.test(background))child.style.backgroundColor=background;if(/^(?:underline|line-through)(?: (?:underline|line-through))?$/.test(decoration))child.style.textDecorationLine=decoration;walk(child)})};walk(box);return box.innerHTML};
+// Comment boxes are stored inside richHtml, so they travel with the article through
+// backups and cloud sync. Toolbar controls and collapsed state are view-only.
+let nvCommentLastRange=null;
+document.addEventListener('selectionchange',()=>{
+ const root=$('#body'),sel=document.getSelection();
+ if(root&&sel?.rangeCount&&root.contains(sel.anchorNode)&&root.contains(sel.focusNode))
+  nvCommentLastRange=sel.getRangeAt(0).cloneRange();
+});
+function nvCommentPlain(root){
+ const controls=[...root.querySelectorAll('.nv-comment-actions')],folded=[...root.querySelectorAll('.nv-comment-collapsed')];
+ const styles=controls.map(el=>el.getAttribute('style'));
+ try{
+  controls.forEach(el=>el.style.setProperty('display','none','important'));
+  folded.forEach(el=>el.classList.remove('nv-comment-collapsed'));
+  return root.innerText.replace(/\u00a0/g,' ');
+ }finally{
+  controls.forEach((el,i)=>styles[i]===null?el.removeAttribute('style'):el.setAttribute('style',styles[i]));
+  folded.forEach(el=>el.classList.add('nv-comment-collapsed'));
+ }
+}
+function nvCommentHydrate(root){
+ root.querySelectorAll('.nv-comment').forEach(box=>{
+  if(box.dataset.nvCommentBound)return;
+  const body=box.querySelector(':scope > .nv-comment-text');
+  if(!body)return;
+  box.dataset.nvCommentBound='1';
+  box.contentEditable='false';box.setAttribute('role','group');box.setAttribute('aria-label','Comment bổ sung');
+  body.contentEditable='true';body.dataset.placeholder='Viết comment bổ sung…';
+  body.setAttribute('aria-label','Nội dung comment bổ sung');
+  const actions=document.createElement('div');actions.className='nv-comment-actions';actions.contentEditable='false';
+  const fold=document.createElement('button');fold.type='button';fold.className='nv-comment-fold';fold.textContent='−';fold.title='Thu gọn comment';fold.setAttribute('aria-label','Thu gọn comment');
+  const remove=document.createElement('button');remove.type='button';remove.className='nv-comment-remove';remove.textContent='×';remove.title='Xóa comment';remove.setAttribute('aria-label','Xóa comment');
+  actions.append(fold,remove);box.insertBefore(actions,body);
+  fold.addEventListener('click',e=>{
+   e.preventDefault();e.stopPropagation();
+   const collapsed=box.classList.toggle('nv-comment-collapsed');
+   fold.textContent=collapsed?'+':'−';fold.title=collapsed?'Mở rộng comment':'Thu gọn comment';
+   fold.setAttribute('aria-label',fold.title);
+  });
+  remove.addEventListener('click',async e=>{
+   e.preventDefault();e.stopPropagation();
+   const okay=window.nvConfirm?await window.nvConfirm({title:'Xóa comment bổ sung?',body:'Chỉ xóa ô comment này, nội dung bài viết khác vẫn giữ nguyên.',ok:'Xóa comment',cancel:'Giữ lại'}):confirm('Xóa comment này?');
+   if(!okay||!box.isConnected)return;
+   box.remove();
+   root.dispatchEvent(new Event('input',{bubbles:true}));
+   window.nvFlushEditor?.();
+   window.nvSay?.('Đã xóa comment');
+  });
+ });
+}
+function nvCommentInsert(){
+ const root=$('#body');if(!root||!current)return;
+ // Save the existing draft before changing the rich HTML.
+ nvSaveBeforeBack();
+ document.querySelector('.write-menu')?.removeAttribute('open');
+ const sel=document.getSelection(),range=nvCommentLastRange;
+ root.focus();
+ if(range&&root.contains(range.commonAncestorContainer)){
+  const ready=range.cloneRange(),parent=ready.startContainer.nodeType===1?ready.startContainer:ready.startContainer.parentElement;
+  const previous=parent?.closest?.('.nv-comment');
+  if(previous){ready.setStartAfter(previous);ready.collapse(true)}
+  sel.removeAllRanges();sel.addRange(ready);
+ }else{
+  const end=document.createRange();end.selectNodeContents(root);end.collapse(false);sel.removeAllRanges();sel.addRange(end);
+ }
+ const id='nv-comment-insert-'+uid().replace(/[^a-zA-Z0-9-]/g,'');
+ const markup='<div id="'+id+'" class="nv-comment" contenteditable="false"><div class="nv-comment-text" contenteditable="true"></div></div>';
+ let inserted=false;
+ try{inserted=!!document.execCommand('insertHTML',false,markup)}catch{}
+ let box=root.querySelector('#'+id);
+ if(!inserted||!box){
+  const r=sel.rangeCount?sel.getRangeAt(0):document.createRange();
+  box=document.createElement('div');box.id=id;box.className='nv-comment';box.contentEditable='false';
+  const text=document.createElement('div');text.className='nv-comment-text';text.contentEditable='true';box.appendChild(text);
+  r.deleteContents();r.insertNode(box);
+ }
+ box.removeAttribute('id');
+ nvCommentHydrate(root);
+ root.dispatchEvent(new Event('input',{bubbles:true}));
+ window.nvFlushEditor?.();
+ const text=box.querySelector('.nv-comment-text');
+ text?.focus();
+ const end=document.createRange();end.selectNodeContents(text);end.collapse(false);sel.removeAllRanges();sel.addRange(end);
+ text?.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+function nvCommentExportText(t){
+ const source=t.richHtml||t.contentHtml||t.content_html;
+ if(!source||!source.includes('nv-comment'))return String(t.content||'');
+ const temp=document.createElement('div');temp.style.cssText='position:fixed;left:-99999px;top:0;width:720px;white-space:pre-wrap';
+ temp.innerHTML=safeRich(source);
+ temp.querySelectorAll('.nv-comment').forEach(box=>{
+  const head=document.createElement('div');head.textContent='[Comment bổ sung]';
+  head.style.fontWeight='bold';box.insertBefore(head,box.firstChild);
+ });
+ document.body.appendChild(temp);
+ try{return temp.innerText.replace(/\u00a0/g,' ').trimEnd()}finally{temp.remove()}
+}
+
 function editor(t){return `<div class="write-screen">
 <div class="write-toolbar"><button class="tool-btn" id="back" title="Quay lại" aria-label="Quay lại">←</button><span class="write-save compact-save" id="saveLabel" title="Tự động lưu" role="img" aria-label="Tự động lưu"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></span><span class="toolbar-word-count" id="toolbarWordCount">${count(t.content).toLocaleString('vi-VN')} chữ</span><button class="tool-btn" id="backgroundToggle" title="Màu nền" aria-label="Màu nền">◐</button><button class="tool-btn" id="copy" title="Sao chép bài" aria-label="Sao chép bài">⧉</button><button class="tool-btn pin-button ${t.pinned?'is-pinned':''}" id="pin" title="${t.pinned?'Bỏ ghim':'Ghim bài'}" aria-label="${t.pinned?'Bỏ ghim':'Ghim bài'}" aria-pressed="${!!t.pinned}"><svg viewBox="0 0 24 24" width="21" height="21" fill="${t.pinned?'currentColor':'none'}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 5 5-3 1-3 5-3 1-3-3-5 9 2-10-3-3 1-3 5-3 1-3Z"/></svg></button><details class="write-menu"><summary class="tool-btn" aria-label="Tùy chọn bài viết">⋮</summary><div class="write-menu-panel">
 <div class="write-menu-heading">Trạng thái bài viết</div><div class="row"><span class="chip" id="editorStatus">${autoStatus(t)==='done'?'✓ Hoàn thành':autoStatus(t)==='draft'?'◐ Đang viết':'○ Chưa viết'}</span><button type="button" class="btn ${autoStatus(t)==='done'?'secondary':''}" id="finishTopic">${autoStatus(t)==='done'?'✎ Viết tiếp':'✓ Hoàn thành'}</button></div><p class="hint">0–50 chữ: Chưa viết · Từ 51 chữ: Đang viết</p>
 <div class="write-menu-heading">Ôn tập và quản lý</div><div class="nv-review-actions"><label style="display:flex;align-items:center;gap:10px;min-height:44px;margin:8px 0 12px;font-weight:650;cursor:pointer"><input type="checkbox" id="noReview" ${t.no_review?'checked':''} style="width:22px;height:22px;min-height:22px;flex:none;accent-color:#263b57"> Không ôn</label><p id="nvReviewFeedback" class="nv-review-feedback" role="status" aria-live="polite" hidden></p><span class="hint">Đánh giá mức độ nhớ (chạm một lần để ghi nhận):</span><div class="nv-review-grade-row"><button class="btn secondary" data-review-grade="again" type="button">↻ Chưa nhớ</button><button class="btn secondary" data-review-grade="hard" type="button">◐ Nhớ một phần</button><button class="btn" data-review-grade="good" type="button">✓ Nhớ tốt</button></div><div class="row"><button class="btn outline" id="undoReview" type="button" ${reviewEntries(t.id).length?'':'disabled'}>↶ Hoàn tác lần ôn</button></div><p class="hint">Đã ôn ${t.review_count||0} lần · Lần gần nhất: ${t.last_reviewed?new Date(t.last_reviewed).toLocaleDateString('vi-VN'):'Chưa ôn'}</p><details><summary>Nhật ký bài viết (${reviewEntries(t.id).length})</summary>${reviewJournal(t.id)}</details></div>
+<div class="write-menu-heading">Bổ sung nội dung</div><button type="button" class="btn outline" id="commentAdd">💬 Comment bổ sung</button><p class="hint">Chèn ô nền vàng tại vị trí con trỏ. Chữ trong comment vẫn tính XP.</p>
 <div class="write-menu-heading">Xuất bài viết</div><button type="button" class="btn outline" id="exportTopicTxt">⬇ Xuất TXT</button><p class="hint">Tải bài đang mở thành tệp văn bản thuần (.txt).</p>
 <div class="nv-danger-zone"><div class="write-menu-heading">Xóa bài</div><p class="hint">Bài sẽ vào Thùng rác và có thể khôi phục bất cứ lúc nào.</p><button class="btn outline nv-danger-btn" id="delete" type="button">🗑 Chuyển vào thùng rác</button></div>
 </div></details></div>
@@ -163,7 +262,7 @@ function bindEditorDraft(el,t){
  const flush=(force=false)=>{
   clearTimeout(timer);timer=0;
   if(!dirty||composing&&!force)return;
-  const plain=el.innerText.replace(/\u00a0/g,' '),html=safeRich(el.innerHTML);
+  const plain=nvCommentPlain(el),html=safeRich(el.innerHTML);
   let savedChange=false;
   if(plain!==t.content||html!==(t.richHtml||t.contentHtml||'')){
    savedChange=true;
@@ -272,7 +371,7 @@ on('#nvStorageCheck','click',async()=>{
   const info=await navigator.storage?.estimate?.();
   label.textContent='Dữ liệu localStorage ≈ '+bytes(local)+(info?.quota?' · Bộ nhớ website ≈ '+bytes(info.usage||0)+' / '+bytes(info.quota):'')+(window.nvXPSaveFailure?' · ⚠ XP chưa lưu được':'');
  }catch(e){label.textContent='Không đọc được dung lượng trình duyệt. Hãy xuất bản sao lưu JSON.'}
- });on('#collapseTopicGroups','click',()=>{active().forEach(t=>collapsedTopicGroups.add(t.id));render()});on('#topicDensityToggle','click',()=>{topicDensity=topicDensity==='compact'?'comfortable':'compact';localStorage.setItem('nv-write-topic-density',topicDensity);render()});if($('#filter'))$('#filter').value=filter;if(current){const t=current;resizeTitle($('#title'));on('#back','click',()=>{nvSaveBeforeBack();if(history.state?.nvWriteView&&history.length>1)history.back();else{current=null;render()}});on('#title','input',e=>{put(t,{title:e.target.value});resizeTitle(e.target)});bindEditorDraft($('#body'),t);
+ });on('#collapseTopicGroups','click',()=>{active().forEach(t=>collapsedTopicGroups.add(t.id));render()});on('#topicDensityToggle','click',()=>{topicDensity=topicDensity==='compact'?'comfortable':'compact';localStorage.setItem('nv-write-topic-density',topicDensity);render()});if($('#filter'))$('#filter').value=filter;if(current){const t=current;resizeTitle($('#title'));on('#back','click',()=>{nvSaveBeforeBack();if(history.state?.nvWriteView&&history.length>1)history.back();else{current=null;render()}});on('#title','input',e=>{put(t,{title:e.target.value});resizeTitle(e.target)});bindEditorDraft($('#body'),t);nvCommentHydrate($('#body'));
 const rich=$('#body'),formatPanel=$('#formatPanel'),paperPanel=$('#backgroundPanel'),custom=$('#writeCustomization');
 document.querySelectorAll('body > #writeCustomization,body > #backgroundPanel').forEach(el=>{if(el!==custom && el!==paperPanel)el.remove()});
 if(custom && custom.parentElement!==document.body)document.body.appendChild(custom);
@@ -413,7 +512,7 @@ on('#moreSupplements','click',()=>{const extra=document.querySelector('.nv-extra
 on('#relatedExisting','click',()=>{const candidates=active().filter(x=>x.id!==t.id&&!related(t).some(l=>l.other.id===x.id));if(!candidates.length){alert('Chưa có bài khác để liên kết');return}const name=prompt('Nhập một phần tên bài cần liên kết:\\n'+candidates.slice(0,12).map(x=>'• '+x.title).join('\\n'));if(!name?.trim())return;const matches=candidates.filter(x=>x.title.toLocaleLowerCase().includes(name.trim().toLocaleLowerCase()));if(matches.length!==1){alert(matches.length?'Có nhiều bài trùng tên. Hãy nhập cụ thể hơn.':'Không tìm thấy bài phù hợp.');return}const kind=confirm('OK: Bài bổ sung\\nHủy: Bài liên quan')?'supplement':'related';links.push({id:uid(),a:t.id,b:matches[0].id,type:kind,deleted:false,updated_at:new Date().toISOString()});saveLinks();render()});
 document.querySelectorAll('[data-related-open]').forEach(b=>b.onclick=()=>{current=db.topics.find(x=>x.id===b.dataset.relatedOpen);render();window.scrollTo(0,0)});
 document.querySelectorAll('[data-unlink]').forEach(b=>b.onclick=()=>{if(confirm('Gỡ liên kết này? Bài viết vẫn được giữ lại.')){links=links.map(l=>l.id===b.dataset.unlink?{...l,deleted:true,updated_at:new Date().toISOString()}:l);saveLinks();render()}});
-document.querySelectorAll('[data-priority]').forEach(b=>b.onclick=()=>{put(t,{priority:b.dataset.priority});render()});document.querySelectorAll('[data-rate]').forEach(b=>b.onclick=()=>{put(t,{rating:b.dataset.rate});render()});on('#copy','click',async()=>{nvSaveBeforeBack();try{await navigator.clipboard.writeText(`${t.title}\n\n${t.content}`);alert('Đã sao chép bài viết')}catch{alert('Trình duyệt chưa cho phép copy')}});document.querySelectorAll('[data-review-grade]').forEach(b=>b.addEventListener('click',()=>recordReview(t,b.dataset.reviewGrade)));on('#noReview','change',e=>{nvSaveBeforeBack();const skip=e.target.checked;put(t,{no_review:skip});nvRefreshReviewPanel(skip?'Đã chọn Không ôn · Bỏ khỏi danh sách ôn và ôn ngẫu nhiên.':'Đã bật ôn lại bài viết.');});on('#undoReview','click',()=>undoReview(t));on('#exportTopicTxt','click',()=>nvExportTopicTxt(t));on('#delete','click',()=>window.nvDeleteTopic(t))}on('#settingsBack','click',()=>{tab=window.nvPreviousTab||'home';render();window.scrollTo(0,0)});on('#accountBack','click',()=>{tab='settings';render();window.scrollTo(0,0)});on('#openAccount','click',()=>{tab='account';render()});on('#logout','click',async()=>{try{const c=await client();const {error}=await c.auth.signOut();if(error)throw error;window.nvResetSyncState?.();render()}catch(e){alert(e.message)}});
+document.querySelectorAll('[data-priority]').forEach(b=>b.onclick=()=>{put(t,{priority:b.dataset.priority});render()});document.querySelectorAll('[data-rate]').forEach(b=>b.onclick=()=>{put(t,{rating:b.dataset.rate});render()});on('#copy','click',async()=>{nvSaveBeforeBack();try{await navigator.clipboard.writeText(`${t.title}\n\n${t.content}`);alert('Đã sao chép bài viết')}catch{alert('Trình duyệt chưa cho phép copy')}});document.querySelectorAll('[data-review-grade]').forEach(b=>b.addEventListener('click',()=>recordReview(t,b.dataset.reviewGrade)));on('#noReview','change',e=>{nvSaveBeforeBack();const skip=e.target.checked;put(t,{no_review:skip});nvRefreshReviewPanel(skip?'Đã chọn Không ôn · Bỏ khỏi danh sách ôn và ôn ngẫu nhiên.':'Đã bật ôn lại bài viết.');});on('#undoReview','click',()=>undoReview(t));on('#commentAdd','click',nvCommentInsert);on('#exportTopicTxt','click',()=>nvExportTopicTxt(t));on('#delete','click',()=>window.nvDeleteTopic(t))}on('#settingsBack','click',()=>{tab=window.nvPreviousTab||'home';render();window.scrollTo(0,0)});on('#accountBack','click',()=>{tab='settings';render();window.scrollTo(0,0)});on('#openAccount','click',()=>{tab='account';render()});on('#logout','click',async()=>{try{const c=await client();const {error}=await c.auth.signOut();if(error)throw error;window.nvResetSyncState?.();render()}catch(e){alert(e.message)}});
 on('#categoryAdd','click',()=>{const v=$('#categoryName').value.trim();if(!v)return;if(v==='Chưa phân loại'){alert('Đây là chủ đề mặc định');return}if([...db.categories,...active().map(t=>t.tag)].includes(v)){alert('Chủ đề đã tồn tại');return}db.categories.push(v);touchCategories();render()});
 document.querySelectorAll('[data-cat-rename]').forEach(b=>b.onclick=()=>{const old=b.dataset.catRename;if(old==='Chưa phân loại'){alert('Không thể đổi tên chủ đề mặc định');return}const v=prompt('Tên mới của chủ đề:',old)?.trim();if(!v||v===old)return;if(v==='Chưa phân loại'||db.categories.includes(v)||active().some(t=>t.tag===v)){alert('Tên này đã tồn tại. Hãy dùng Gộp chủ đề.');return}db.categories=db.categories.map(c=>c===old?v:c);db.topics.filter(t=>t.tag===old).forEach(t=>put(t,{tag:v}));touchCategories();render()});
 document.querySelectorAll('[data-cat-merge]').forEach(b=>b.onclick=()=>{const old=b.dataset.catMerge;const choices=categoryNames().filter(c=>c!==old);const target=prompt('Gộp vào chủ đề nào?\n'+choices.join('\n'));if(!target||!choices.includes(target)){if(target)alert('Hãy nhập đúng tên chủ đề đích');return}if(!confirm(`Chuyển tất cả bài từ “${old}” sang “${target}”?`))return;db.topics.filter(t=>t.tag===old).forEach(t=>put(t,{tag:target}));db.categories=db.categories.filter(c=>c!==old);touchCategories();render()});
@@ -425,7 +524,7 @@ function nvExportTopicTxt(t){
  nvSaveBeforeBack();
  const title=String(t.title||'Bài viết').trim()||'Bài viết';
  const filename=(title.replace(/[\\/:*?"<>|\u0000-\u001f]/g,'-').replace(/[. ]+$/g,'').slice(0,80).trim()||'bai-viet')+'.txt';
- const plain=String(t.content||'').replace(/\r\n?/g,'\n');
+ const plain=nvCommentExportText(t).replace(/\r\n?/g,'\n');
  download(filename,'\uFEFF'+title+'\n\n'+plain,'text/plain;charset=utf-8');
  document.querySelector('.write-menu')?.removeAttribute('open');
  window.nvSay?.('Đã xuất TXT');
