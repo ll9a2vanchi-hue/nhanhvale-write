@@ -1,12 +1,15 @@
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const read=p=>fs.readFileSync(p,'utf8'),app=read('js/app.js'),html=read('index.html'),sw=read('sw.js'),ver=read('js/version.js'),workflow=read('.github/workflows/write-quality.yml');
-assert(ver.includes("'6.22.0'"),'version');
-assert(sw.includes("nv-write-v59"),'service worker cache');
+assert(ver.includes("'6.25.1'"),'version');
+assert(sw.includes("nv-write-v63"),'service worker cache');
 assert(html.includes('js/data-safety.js'),'safe helper');assert(html.includes('js/shadow-vault.js'),'separate backup script');assert(sw.includes('js/shadow-vault.js'),'offline shadow script');
 assert(app.includes('xp:{...xp},backupVersion:2'),'XP backup');
 assert(app.includes('window.nvDataSafety.validateBackup(JSON.parse'),'backup validation');
 assert(app.includes('window.nvDataSafety.mergeDailyLogs'),'monotonic logs');
 assert(app.includes('nvInvalidLocalRaw!==null'),'bad saved state protected');
+assert(app.includes('id="exportTopicTxt"'),'TXT menu option');
+assert(app.includes("on('#exportTopicTxt','click',()=>nvExportTopicTxt(t))"),'TXT click handler');
+assert(app.includes("download(filename,'\\uFEFF'+title"),'TXT UTF-8 BOM and article title');
 assert(app.includes('nvTopicSearchFrame=requestAnimationFrame(nvRefreshTopicSearch)'),'stable search');
 assert(workflow.includes('node tests/data-safety.cjs'),'safety tests in CI');
 console.log('PASS: production release contracts, cache, backup, UX and CI');
