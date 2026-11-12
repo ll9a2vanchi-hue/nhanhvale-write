@@ -781,3 +781,22 @@ html[data-nv-motion=off] .nv-pick-overlay{display:none}
 #formatPanel .nv-rule-button .nv-rule-glyph{display:block;width:22px;border-top:2px solid currentColor}
 #body.rich-editor hr{display:block;box-sizing:border-box;width:100%;height:0;margin:1.2em 0;border:0;border-top:2px solid #c6d3e2;clear:both}
 html[data-theme=dark] #body.rich-editor hr{border-top-color:#7486a0}
+
+/* v6.24 — Main toolbar fits the viewport; narrow phones get six primary actions. */
+body.writing-mode #writeCustomization #formatPanel{
+  overflow-x:hidden!important;
+  overscroll-behavior-x:none;
+  justify-content:space-between!important;
+  gap:4px!important;
+  min-width:0;
+}
+body.writing-mode #writeCustomization .nv-tool-more .nv-compact-undo{display:none!important}
+@media(max-width:349px){
+  body.writing-mode #writeCustomization #formatPanel>.format-button[data-cmd="undo"]{display:none!important}
+  body.writing-mode #writeCustomization .nv-tool-more .nv-compact-undo{display:flex!important}
+}
+@media(max-width:300px){
+  body.writing-mode #writeCustomization #formatPanel>.format-button{
+    width:40px!important;min-width:40px!important;flex-basis:40px!important
+  }
+}
