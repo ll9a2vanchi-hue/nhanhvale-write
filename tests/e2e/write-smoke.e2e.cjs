@@ -43,6 +43,7 @@ const seed=Array.from({length:750},(_,n)=>({
   assert.equal(await page.locator('#title').inputValue(),'Bài đặc biệt cần tìm','keyboard opens correct topic');
 
   // Real mobile editor: insert, edit, fold, export, and retain the comment in cloud-ready richHtml.
+  const xpBefore=await page.evaluate(()=>JSON.parse(localStorage.getItem('nv-write-xp-v1')).total);
   await page.locator('.write-menu>summary').click();
   await page.locator('#commentAdd').click();
   await page.locator('.nv-comment-text').fill('Ghi chú bổ sung tính đủ điểm XP');
@@ -52,6 +53,7 @@ const seed=Array.from({length:750},(_,n)=>({
    return {text:t.content,rich:t.richHtml,score:JSON.parse(localStorage.getItem('nv-write-xp-v1')||'{}').total};
   });
   assert(note.text.includes('Ghi chú bổ sung tính đủ điểm XP'),'comment participates in plain content');
+  assert(note.score>xpBefore,'typing comment must increase XP');
   assert(note.rich.includes('class="nv-comment"'),'comment persists in richHtml');
   assert(!note.rich.includes('nv-comment-actions'),'UI controls must never be stored');
   await page.locator('.nv-comment-fold').click();
@@ -69,6 +71,17 @@ const seed=Array.from({length:750},(_,n)=>({
   await page.locator('#search').fill('đặc biệt');
   await page.locator('#nvTopicResults [data-open]').first().click();
   assert.equal(await page.locator('.nv-comment-text').innerText(),'Ghi chú bổ sung tính đủ điểm XP','comment must survive reload');
+  await page.locator('.write-menu>summary').click();
+  await page.locator('#commentAdd').click();
+  await page.locator('.nv-comment-text').last().fill('Comment thứ hai vẫn tính XP');
+  await page.evaluate(()=>window.nvFlushEditor?.());
+  assert.equal(await page.locator('.nv-comment').count(),2,'multiple comment boxes allowed');
+  await page.locator('.nv-comment-remove').last().click();
+  await page.locator('.nv-confirm-ok').click();
+  await page.evaluate(()=>window.nvFlushEditor?.());
+  assert.equal(await page.locator('.nv-comment').count(),1,'delete removes only chosen comment');
+  assert.equal(await page.locator('.nv-comment-text').innerText(),'Ghi chú bổ sung tính đủ điểm XP','delete keeps the first comment');
+
 
   await page.locator('#back').click();
   await page.locator('#settingsBtn').click();
