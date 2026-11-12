@@ -8,6 +8,9 @@ assert(app.includes('window.nvDataSafety.validateBackup(JSON.parse'),'backup val
 assert(app.includes('window.nvDataSafety.mergeDailyLogs'),'monotonic logs');
 assert(app.includes('nvInvalidLocalRaw!==null'),'bad saved state protected');
 assert(app.includes('id="commentAdd"'),'comment menu option');
+assert(app.includes('id="nvToolMore"'),'formatting ellipsis menu exists');
+assert(/id="nvToolMore"[^\n]*id="commentAdd"/.test(app),'comment belongs inside formatting ellipsis menu');
+assert(!app.includes('write-menu-heading">Bổ sung nội dung'),'comment removed from article menu');
 assert(app.includes("on('#commentAdd','click',nvCommentInsert)"),'comment insertion handler');
 assert(app.includes('nvCommentHydrate'),'comment hydration on editor load');
 assert(app.includes('const plain=nvCommentPlain(el),html=safeRich(el.innerHTML)'),'comment text included in XP');
