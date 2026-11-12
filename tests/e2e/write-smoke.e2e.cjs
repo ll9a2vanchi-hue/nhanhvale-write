@@ -42,6 +42,34 @@ const seed=Array.from({length:750},(_,n)=>({
   await page.waitForSelector('#body');
   assert.equal(await page.locator('#title').inputValue(),'Bài đặc biệt cần tìm','keyboard opens correct topic');
 
+  // Real mobile editor: insert, edit, fold, export, and retain the comment in cloud-ready richHtml.
+  await page.locator('.write-menu>summary').click();
+  await page.locator('#commentAdd').click();
+  await page.locator('.nv-comment-text').fill('Ghi chú bổ sung tính đủ điểm XP');
+  await page.evaluate(()=>window.nvFlushEditor?.());
+  let note=await page.evaluate(()=>{
+   const t=JSON.parse(localStorage.getItem('nv-write-v1')).topics.find(t=>t.id==='smoke-400');
+   return {text:t.content,rich:t.richHtml,score:JSON.parse(localStorage.getItem('nv-write-xp-v1')||'{}').total};
+  });
+  assert(note.text.includes('Ghi chú bổ sung tính đủ điểm XP'),'comment participates in plain content');
+  assert(note.rich.includes('class="nv-comment"'),'comment persists in richHtml');
+  assert(!note.rich.includes('nv-comment-actions'),'UI controls must never be stored');
+  await page.locator('.nv-comment-fold').click();
+  await page.evaluate(()=>window.nvFlushEditor?.());
+  note=await page.evaluate(()=>JSON.parse(localStorage.getItem('nv-write-v1')).topics.find(t=>t.id==='smoke-400'));
+  assert(note.content.includes('Ghi chú bổ sung tính đủ điểm XP'),'collapsing must preserve the comment text');
+  await page.locator('.nv-comment-fold').click();
+  await page.locator('.write-menu>summary').click();
+  const [commentTxt]=await Promise.all([page.waitForEvent('download'),page.locator('#exportTopicTxt').click()]);
+  const txt=fs.readFileSync(await commentTxt.path(),'utf8');
+  assert(txt.includes('[Comment bổ sung]')&&txt.includes('Ghi chú bổ sung tính đủ điểm XP'),'TXT export includes labelled note');
+  await page.reload({waitUntil:'domcontentloaded'});
+  await page.locator('[data-tab="topics"]').click();
+  await page.locator('[data-topic-view="all"]').click();
+  await page.locator('#search').fill('đặc biệt');
+  await page.locator('#nvTopicResults [data-open]').first().click();
+  assert.equal(await page.locator('.nv-comment-text').innerText(),'Ghi chú bổ sung tính đủ điểm XP','comment must survive reload');
+
   await page.locator('#back').click();
   await page.locator('#settingsBtn').click();
   await page.locator('#setting-6 summary').click();
