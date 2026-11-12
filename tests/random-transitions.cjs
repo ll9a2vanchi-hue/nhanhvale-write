@@ -26,12 +26,12 @@ const topics=[
 ];
 const alerts=[],transition=[];
 const ctx={current:null,active:()=>topics,autoStatus:t=>t.status,isDue:()=>true,
- render:()=>{},alert:msg=>alerts.push(msg),Math:{random:()=>0},
+ render:()=>{},alert:msg=>alerts.push(msg),Math:{random:()=>0,floor:Math.floor},
  window:{nvRandomTransition:(mode,title)=>transition.push([mode,title])}};
 vm.createContext(ctx);
 vm.runInContext(app.slice(randomFrom,randomTo),ctx);
 ctx.random(false);
-assert.equal(ctx.current.id,'write','Viết ngẫu nhiên must exclude unchecked? no: exclude no_review');
+assert.equal(ctx.current.id,'write','Viết ngẫu nhiên must exclude no_review');
 ctx.random(true);
 assert.equal(ctx.current.id,'review','Ôn ngẫu nhiên must exclude no_review');
 topics.forEach(t=>t.no_review=true);
