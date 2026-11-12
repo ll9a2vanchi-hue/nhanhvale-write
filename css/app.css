@@ -777,4 +777,7 @@ html[data-theme=dark] .nv-pick-skip{background:#26364c;color:#f2f6fd;border-colo
 html[data-nv-motion=off] .nv-pick-overlay{display:none}
 @media(prefers-reduced-motion:reduce){.nv-pick-overlay{display:none!important}}
 @media(max-width:390px){.nv-pick-scene{transform:scale(.88);margin:-11px 0}.nv-pick-label strong{font-size:16px}}
-
+/* v6.23 — Full-width horizontal divider in the rich-text editor. */
+#formatPanel .nv-rule-button .nv-rule-glyph{display:block;width:22px;border-top:2px solid currentColor}
+#body.rich-editor hr{display:block;box-sizing:border-box;width:100%;height:0;margin:1.2em 0;border:0;border-top:2px solid #c6d3e2;clear:both}
+html[data-theme=dark] #body.rich-editor hr{border-top-color:#7486a0}
