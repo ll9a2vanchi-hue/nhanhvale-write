@@ -3,7 +3,7 @@ const src=require('./_src.cjs');
 let next=1,timers=new Map(),reads=0,saves=0,awards=[];
 const el={innerHTML:'<div>ban đầu</div>',innerText:'ban đầu',listeners:{},addEventListener(k,f){(this.listeners[k]??=[]).push(f)}};
 const topic={content:'ban đầu',richHtml:el.innerHTML};
-const context={window:{},setTimeout:f=>{let id=next++;timers.set(id,f);return id},clearTimeout:id=>timers.delete(id),safeRich:x=>{reads++;return x},earnXP:(t,b,a,eligible)=>awards.push(eligible),put:(t,p)=>{saves++;Object.assign(t,p)},count:s=>s.split(/\s+/).length,autoStatus:()=> 'draft',$:()=>null};
+const context={window:{},setTimeout:f=>{let id=next++;timers.set(id,f);return id},clearTimeout:id=>timers.delete(id),safeRich:x=>{reads++;return x},nvCommentPlain:el=>el.innerText,earnXP:(t,b,a,eligible)=>awards.push(eligible),put:(t,p)=>{saves++;Object.assign(t,p)},count:s=>s.split(/\s+/).length,autoStatus:()=> 'draft',$:()=>null};
 vm.createContext(context);
 vm.runInContext(src.slice(src.indexOf('function bindEditorDraft('),src.indexOf("\ndocument.addEventListener('visibilitychange'")),context);
 context.bindEditorDraft(el,topic);
