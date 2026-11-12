@@ -44,8 +44,10 @@ const seed=Array.from({length:750},(_,n)=>({
 
   // Real mobile editor: insert, edit, fold, export, and retain the comment in cloud-ready richHtml.
   const xpBefore=await page.evaluate(()=>JSON.parse(localStorage.getItem('nv-write-xp-v1')).total);
-  await page.locator('.write-menu>summary').click();
+  await page.locator('.nv-more-toggle').click();
   await page.locator('#commentAdd').click();
+  assert.equal(await page.locator('.write-menu-panel #commentAdd').count(),0,'top article menu does not contain comment');
+  assert.equal(await page.locator('#nvToolMore #commentAdd').count(),1,'comment inside bottom formatting menu');
   await page.locator('.nv-comment-text').fill('Ghi chú bổ sung tính đủ điểm XP');
   await page.evaluate(()=>window.nvFlushEditor?.());
   let note=await page.evaluate(()=>{
@@ -71,7 +73,7 @@ const seed=Array.from({length:750},(_,n)=>({
   await page.locator('#search').fill('đặc biệt');
   await page.locator('#nvTopicResults [data-open]').first().click();
   assert.equal(await page.locator('.nv-comment-text').innerText(),'Ghi chú bổ sung tính đủ điểm XP','comment must survive reload');
-  await page.locator('.write-menu>summary').click();
+  await page.locator('.nv-more-toggle').click();
   await page.locator('#commentAdd').click();
   await page.locator('.nv-comment-text').last().fill('Comment thứ hai vẫn tính XP');
   await page.evaluate(()=>window.nvFlushEditor?.());
