@@ -3,5 +3,5 @@ for(const term of ['function nvBindTopicResults(root)','el.onkeydown=e=>','role'
 assert(!app.includes("query=e.target.value;const pos=e.target.selectionStart;render()"),'no full redraw on search typing');
 assert(app.includes("t.title+' '+(t.tag||'')+' '+t.content"),'category search');
 assert(css.includes('[data-open][role="button"]:focus-visible'),'visible keyboard outline');
-assert(css.includes('.nv-tree-toggle,.nv-group-toggle{min-width:44px'),'group controls have 44px target');
+assert(app.includes('id="topicDensityToggle"'),'density control remains');
 console.log('PASS: incremental search, keyboard cards, larger targets, storage information');

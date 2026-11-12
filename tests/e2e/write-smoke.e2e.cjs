@@ -27,12 +27,26 @@ const seed=Array.from({length:750},(_,n)=>({
   await ctx.route(/supabase\.co/,route=>route.abort());
   await ctx.addInitScript(rows=>{
    if(!localStorage.getItem('nv-write-v1'))localStorage.setItem('nv-write-v1',JSON.stringify({topics:rows,logs:{},settings:{},syncQueue:[]}));
+   if(!localStorage.getItem('nv-write-links-v1'))localStorage.setItem('nv-write-links-v1',JSON.stringify([
+    {id:'legacy-sup',a:'smoke-0',b:'smoke-400',type:'supplement',deleted:false,updated_at:'2026-11-01T00:00:00Z'},
+    {id:'legacy-related',a:'smoke-1',b:'smoke-400',type:'related',deleted:false,updated_at:'2026-11-01T00:00:00Z'}
+   ]));
   },seed);
   const page=await ctx.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto(BASE,{waitUntil:'domcontentloaded'});
   await page.locator('[data-tab="topics"]').click();
-  await page.locator('[data-topic-view="all"]').click();
+  assert.equal(await page.locator('[data-topic-view]').count(),0,'legacy linked article tabs are gone');
+  assert.equal(await page.locator('#nvTopicResults [data-open]').count(),750,'all saved topics shown independently');
+  const retired=await page.evaluate(()=>{
+   const links=JSON.parse(localStorage.getItem('nv-write-links-v1'));
+   const archived=JSON.parse(localStorage.getItem('nv-write-legacy-links-v1'));
+   const articles=JSON.parse(localStorage.getItem('nv-write-v1')).topics;
+   return {allDeleted:links.every(x=>x.deleted),archived:archived.length,articles:articles.length,title:articles.find(x=>x.id==='smoke-400')?.title};
+  });
+  assert(retired.allDeleted&&retired.archived===2,'old relationships retired and backed up');
+  assert.equal(retired.articles,750,'no articles deleted by retirement');
+  assert.equal(retired.title,'Bài đặc biệt cần tìm','former supplement remains a normal article');
   await page.locator('#search').fill('đặc biệt');
   await page.waitForFunction(()=>document.querySelectorAll('#nvTopicResults [data-open]').length===1);
   assert.equal(await page.evaluate(()=>document.activeElement?.id),'search','typing should not lose focus');
@@ -69,7 +83,6 @@ const seed=Array.from({length:750},(_,n)=>({
   assert(txt.includes('[Comment bổ sung]')&&txt.includes('Ghi chú bổ sung tính đủ điểm XP'),'TXT export includes labelled note');
   await page.reload({waitUntil:'domcontentloaded'});
   await page.locator('[data-tab="topics"]').click();
-  await page.locator('[data-topic-view="all"]').click();
   await page.locator('#search').fill('đặc biệt');
   await page.locator('#nvTopicResults [data-open]').first().click();
   assert.equal(await page.locator('.nv-comment-text').innerText(),'Ghi chú bổ sung tính đủ điểm XP','comment must survive reload');
