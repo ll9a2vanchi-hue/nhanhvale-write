@@ -800,3 +800,26 @@ body.writing-mode #writeCustomization .nv-tool-more .nv-compact-undo{display:non
     width:40px!important;min-width:40px!important;flex-basis:40px!important
   }
 }
+
+/* v6.25 — unobtrusive once-per-version update notice for mobile + PWA. */
+.nv-update-notice{
+  position:fixed;z-index:160;top:calc(74px + env(safe-area-inset-top,0px));left:50%;
+  width:min(390px,calc(100vw - 24px));max-width:100%;padding:11px 10px 11px 13px;
+  display:flex;align-items:center;gap:10px;border:1px solid #cce5d6;border-radius:14px;
+  background:#f0fbf5;color:#16452d;box-shadow:0 10px 32px #0b17252e;
+  opacity:0;pointer-events:none;transform:translate(-50%,-8px);
+  transition:opacity .2s ease,transform .2s ease
+}
+.nv-update-notice.show{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+.nv-update-icon{display:grid;place-items:center;flex:none;width:33px;height:33px;
+  border-radius:10px;background:#d4f4e1;color:#187744;font-size:19px;font-weight:850}
+.nv-update-copy{display:grid;gap:3px;min-width:0;flex:1;line-height:1.35}
+.nv-update-copy strong{font-size:13px;font-weight:800}
+.nv-update-copy span{font-size:12px;overflow-wrap:anywhere}
+.nv-update-close{flex:none;min-height:40px;min-width:40px;border:0;border-radius:10px;
+  background:transparent;color:inherit;font-size:23px;line-height:1;cursor:pointer}
+.nv-update-close:focus-visible{outline:2px solid currentColor;outline-offset:1px}
+html[data-theme=dark] .nv-update-notice{
+  background:#193c2e;color:#def7e8;border-color:#2b6950;box-shadow:0 10px 32px #0008}
+html[data-theme=dark] .nv-update-icon{background:#285942;color:#c7f4db}
+@media(prefers-reduced-motion:reduce){.nv-update-notice{transition:none}}
