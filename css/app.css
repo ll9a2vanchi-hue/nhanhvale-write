@@ -823,3 +823,50 @@ html[data-theme=dark] .nv-update-notice{
   background:#193c2e;color:#def7e8;border-color:#2b6950;box-shadow:0 10px 32px #0008}
 html[data-theme=dark] .nv-update-icon{background:#285942;color:#c7f4db}
 @media(prefers-reduced-motion:reduce){.nv-update-notice{transition:none}}
+
+
+/* Inline comment notes — stored as sanitised rich text, editable on mobile. */
+#body.rich-editor .nv-comment{
+ position:relative;display:block;box-sizing:border-box;min-width:0;
+ margin:14px 0;padding:40px 14px 13px;border:1.5px solid #dba83e;
+ border-radius:12px;background:#fff5cb;color:#503e1f;
+ box-shadow:0 2px 8px rgba(129,87,0,.08);line-height:1.65;
+}
+#body.rich-editor .nv-comment::before{
+ content:"💬 Comment bổ sung";display:block;position:absolute;top:10px;left:14px;
+ font-size:13px;line-height:24px;font-weight:750;color:#81570d;pointer-events:none;
+}
+#body.rich-editor .nv-comment-actions{
+ position:absolute;right:10px;top:7px;display:flex;align-items:center;gap:5px;
+}
+#body.rich-editor .nv-comment-actions button{
+ display:grid;place-items:center;min-width:32px;min-height:32px;padding:0;
+ color:#76500b;background:#fff8df;border:1px solid #e2bd68;border-radius:9px;
+ font:700 21px/1 system-ui,sans-serif;cursor:pointer;touch-action:manipulation;
+}
+#body.rich-editor .nv-comment-actions button:focus-visible{
+ outline:2px solid #80540d;outline-offset:2px;
+}
+#body.rich-editor .nv-comment-text{
+ display:block;min-height:24px;outline:none;white-space:pre-wrap;overflow-wrap:anywhere;
+ color:#503e1f;caret-color:#7b5300;font-size:inherit;
+}
+#body.rich-editor .nv-comment-text:empty::before{
+ content:attr(data-placeholder);color:#a28b56;pointer-events:none;
+}
+#body.rich-editor .nv-comment.nv-comment-collapsed{
+ padding-bottom:10px;min-height:49px;
+}
+#body.rich-editor .nv-comment.nv-comment-collapsed .nv-comment-text{display:none}
+#body.rich-editor .nv-comment.nv-comment-collapsed::after{
+ content:"Comment đang thu gọn";display:block;font-size:12px;line-height:18px;color:#987e45;
+}
+html[data-theme=dark] #body.rich-editor .nv-comment{
+ background:#514016!important;border-color:#c79e42!important;color:#fff3cc!important;
+}
+html[data-theme=dark] #body.rich-editor .nv-comment::before{color:#ffe2a0}
+html[data-theme=dark] #body.rich-editor .nv-comment-text{color:#fff3cc!important;caret-color:#fff1c2}
+html[data-theme=dark] #body.rich-editor .nv-comment-actions button{
+ background:#6b531c;border-color:#a57e34;color:#fff1c2;
+}
+@media(max-width:420px){#body.rich-editor .nv-comment{padding-right:10px;padding-left:10px}#body.rich-editor .nv-comment::before{left:10px}}
