@@ -50,5 +50,35 @@ const disk=(p,k)=>p.evaluate(k=>JSON.parse(localStorage.getItem(k)),k);
   check('signed-in XP: 1 baseline + 3 events in cloud, no duplicates',rows.length===4&&new Set(rows.map(r=>r.id)).size===4,rows.map(r=>r.id+':'+r.words));
   check('signed-in XP: both tabs total = cloud sum (135)',sum===135&&ta===135&&tb===135,{sum,ta,tb});
   await A.evaluate(()=>localStorage.clear());await ctx.close()}
+ // A returning account with level-5 local XP and level-10 cloud XP
+ // must never paint a misleading level 5 before synchronization.
+ {const fake=createFake();
+  fake.seed('write_xp_events',[{id:'baseline:'+UID,user_id:UID,words:6000,created_at:'2026-10-01T00:00:00.000001+00:00'}]);
+  const ctx=await br.newContext(opt);await ctx.route(/supabase\.co/,fake.handler);
+  await ctx.addInitScript(([k,v,u])=>{
+   if(!localStorage.getItem('__xp_seeded')){
+    localStorage.setItem(k,v);localStorage.setItem('nv-write-owner-v1',u);
+    localStorage.setItem('nv-write-xp-v1',JSON.stringify({initialized:true,total:1500,base:1500,events:[],sent:[],high:{},expanded:false}));
+    localStorage.setItem('__xp_seeded','1');
+   }
+  },[SESSION_KEY,session,UID]);
+  const page=await ctx.newPage();page.on('pageerror',er=>errs.push(er.message));
+  await page.goto(BASE,{waitUntil:'domcontentloaded'});
+  const initial=await page.locator('#xpMount').innerText();
+  check('startup XP: never paint stale level 5',!initial.includes('Cấp 5'),initial);
+  await page.waitForFunction(()=>document.querySelector('#xpMount')?.textContent?.includes('Cấp 10'),null,{timeout:20000});
+  const first=await page.evaluate(()=>({total:xp.total,cache:JSON.parse(localStorage.getItem('nv-write-xp-confirmed-v1'))}));
+  check('startup XP: cloud confirms level 10 and preserves 6000 points',first.total===6000&&first.cache?.user===UID&&first.cache.total===6000,first);
+  await page.evaluate(()=>{
+   const stale=JSON.parse(localStorage.getItem('nv-write-xp-v1'));
+   stale.total=1500;stale.base=1500;stale.cloud=null;
+   localStorage.setItem('nv-write-xp-v1',JSON.stringify(stale));
+  });
+  await page.reload({waitUntil:'domcontentloaded'});
+  const second=await page.locator('#xpMount').innerText();
+  check('confirmed XP: reload uses level 10 immediately, not stale level 5',second.includes('Cấp 10')&&!second.includes('Cấp 5'),second);
+  await page.waitForFunction(()=>!syncing&&xp.total===6000,null,{timeout:20000});
+  await ctx.close();
+ }
  check('no page errors',!errs.length,errs);
  await br.close();const fail=results.filter(r=>!r.ok).length;console.log(fail?'MULTITAB-AUX FAIL '+fail:'MULTITAB-AUX PASS '+results.length+(DEVICE?' ('+DEVICE+')':' (desktop)'));process.exit(fail?1:0)})();
