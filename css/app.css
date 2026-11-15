@@ -870,3 +870,48 @@ html[data-theme=dark] #body.rich-editor .nv-comment-actions button{
  background:#6b531c;border-color:#a57e34;color:#fff1c2;
 }
 @media(max-width:420px){#body.rich-editor .nv-comment{padding-right:10px;padding-left:10px}#body.rich-editor .nv-comment::before{left:10px}}
+
+
+/* v6.26.5 — compact XP banner, light/dark, touch and narrow screens. */
+#xpMount .nv-xp-v2{--xp-purple:#7454dc;--xp-ink:#20283b;--xp-muted:#697589;
+ border:1px solid #e3e5ec;border-radius:17px;background:var(--card-bg,#fff);
+ color:var(--xp-ink);box-shadow:0 2px 12px #1d2b4508;overflow:hidden;margin-bottom:12px}
+#xpMount .nv-xp-v2 .nv-xp-toggle{width:100%;min-height:96px;padding:14px 16px 11px;display:flex;align-items:center;gap:12px;
+ text-align:left;cursor:pointer;touch-action:manipulation;border:0;background:transparent;color:inherit}
+#xpMount .nv-xp-v2 .nv-xp-mark{display:grid;place-items:center;flex:0 0 41px;width:41px;height:41px;
+ border-radius:13px;background:#f0ebff;color:var(--xp-purple);font-size:22px;line-height:1}
+#xpMount .nv-xp-v2 .nv-xp-main{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0}
+#xpMount .nv-xp-v2 .nv-xp-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;min-width:0;line-height:1.2}
+#xpMount .nv-xp-v2 .nv-xp-level{color:var(--xp-ink);font-size:19px;font-weight:800;letter-spacing:-.4px;white-space:nowrap}
+#xpMount .nv-xp-v2 .nv-xp-rank{color:var(--xp-purple);font-size:13px;font-weight:650;line-height:1.25}
+#xpMount .nv-xp-v2 .nv-xp-track{width:100%;height:8px;border-radius:999px;background:#e6e7f1;overflow:hidden}
+#xpMount .nv-xp-v2 .nv-xp-track i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#9675ff,#6d4cdf)}
+#xpMount .nv-xp-v2 .nv-xp-progress-meta{display:flex;justify-content:space-between;gap:4px 8px;flex-wrap:wrap;
+ color:var(--xp-muted);font-size:12px;font-weight:600;line-height:1.35;font-variant-numeric:tabular-nums}
+#xpMount .nv-xp-v2 .nv-xp-progress-meta span:last-child{color:var(--xp-purple);white-space:nowrap}
+#xpMount .nv-xp-v2 .nv-xp-chevron{color:#697589;flex:0 0 22px;text-align:center;font-size:21px;line-height:1}
+#xpMount .nv-xp-v2 .nv-xp-detail{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;
+ border-top:1px solid #ececf3;padding:0 16px 10px}
+#xpMount .nv-xp-v2 .nv-xp-stat{display:flex;flex-direction:column;gap:2px;min-width:0;
+ padding:10px 10px 9px 0;background:transparent;border-radius:0}
+#xpMount .nv-xp-v2 .nv-xp-stat+.nv-xp-stat{border-left:1px solid #ececf3;padding-left:15px;padding-right:0}
+#xpMount .nv-xp-v2 .nv-xp-stat small{font-size:12px!important;color:var(--xp-muted);line-height:1.3}
+#xpMount .nv-xp-v2 .nv-xp-stat b{font-size:22px;line-height:1.2;font-weight:800;letter-spacing:-.4px;
+ color:var(--xp-ink);font-variant-numeric:tabular-nums}
+#xpMount .nv-xp-v2 .nv-xp-next{grid-column:1/-1;display:flex;justify-content:space-between;gap:4px 12px;flex-wrap:wrap;
+ align-items:center;margin:1px 0 0;padding:8px 0 0;border-top:1px solid #ececf3;font-size:12px!important;line-height:1.4}
+#xpMount .nv-xp-v2 .nv-xp-next-label{color:var(--xp-muted)}
+#xpMount .nv-xp-v2 .nv-xp-next strong{color:var(--xp-purple);font-weight:700}
+#xpMount .nv-xp-v2.nv-xp-loading .nv-xp-toggle{min-height:78px}
+html[data-theme=dark] #xpMount .nv-xp-v2{--xp-purple:#bcabff;--xp-ink:#f1edff;--xp-muted:#c0c7db;
+ background:#1c2340;border-color:#394362}
+html[data-theme=dark] #xpMount .nv-xp-v2 .nv-xp-mark{background:#342c60}
+html[data-theme=dark] #xpMount .nv-xp-v2 .nv-xp-track{background:#434760}
+html[data-theme=dark] #xpMount .nv-xp-v2 :is(.nv-xp-detail,.nv-xp-next,.nv-xp-stat+.nv-xp-stat){border-color:#394362}
+html[data-theme=dark] #xpMount .nv-xp-v2 .nv-xp-chevron{color:#c0c7db}
+@media(max-width:390px){#xpMount .nv-xp-v2 .nv-xp-toggle{padding:12px 12px 9px;gap:9px}
+ #xpMount .nv-xp-v2 .nv-xp-mark{width:36px;height:36px;flex-basis:36px;border-radius:11px;font-size:20px}
+ #xpMount .nv-xp-v2 .nv-xp-detail{padding:0 12px 9px}
+ #xpMount .nv-xp-v2 .nv-xp-level{font-size:18px}
+ #xpMount .nv-xp-v2 .nv-xp-rank{font-size:12px}
+ #xpMount .nv-xp-v2 .nv-xp-chevron{flex-basis:20px}}
