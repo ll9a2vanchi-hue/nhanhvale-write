@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const read=p=>fs.readFileSync(p,'utf8'),app=read('js/app.js'),html=read('index.html'),sw=read('sw.js'),ver=read('js/version.js'),workflow=read('.github/workflows/write-quality.yml');
-assert(ver.includes("'6.26.4'"),'version');
-assert(sw.includes("nv-write-v68"),'service worker cache');
+assert(ver.includes("'6.26.5'"),'version');
+assert(sw.includes("nv-write-v69"),'service worker cache');
 assert(html.includes('js/data-safety.js'),'safe helper');assert(html.includes('js/shadow-vault.js'),'separate backup script');assert(sw.includes('js/shadow-vault.js'),'offline shadow script');
 assert(app.includes('xp:{...xp},backupVersion:2'),'XP backup');
 assert(app.includes('window.nvDataSafety.validateBackup(JSON.parse'),'backup validation');
@@ -12,6 +12,15 @@ assert(app.includes('nvXPDisplayTotal'),'initial XP display is guarded against s
 assert(app.includes('Đang đồng bộ cấp độ…'),'loading text when cloud XP not yet verified');
 assert(app.includes('nvXPFinishStartup(user.id)'),'cloud completion confirms and caches final XP');
 assert(app.includes('nvXPFinishStartup(null)'),'sync failure shows offline/local fallback');
+assert(app.includes('nv-xp-v2'),'compact XP banner class');
+assert(app.includes('nv-xp-progress-meta'),'progress and remaining XP labels');
+assert(app.includes('nv-xp-stat'),'compact metrics');
+assert(app.includes('nv-xp-next-label'),'next title retained');
+assert(app.includes('aria-valuenow='),'accessible exact XP progress');
+assert(app.includes('aria-controls="nvXPExtra"'),'accessible toggle');
+const compactCss=read('css/app.css');
+assert(compactCss.includes('#xpMount .nv-xp-v2 .nv-xp-stat'),'compact stat layout');
+assert(compactCss.includes('@media(max-width:390px)'),'narrow mobile XP layout');
 assert(app.includes('id="commentAdd"'),'comment menu option');
 assert(app.includes('id="nvToolMore"'),'formatting ellipsis menu exists');
 assert(/id="nvToolMore"[^\n]*id="commentAdd"/.test(app),'comment belongs inside formatting ellipsis menu');

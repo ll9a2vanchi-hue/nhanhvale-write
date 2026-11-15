@@ -35,6 +35,25 @@ const seed=Array.from({length:750},(_,n)=>({
   const page=await ctx.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto(BASE,{waitUntil:'domcontentloaded'});
+  const xpHero=page.locator('#xpMount .nv-xp-v2');
+  assert.equal(await xpHero.count(),1,'XP hero uses compact layout');
+  assert.equal(await page.locator('#xpToggle').count(),1,'expand toggle exists');
+  await page.locator('#xpToggle').click();
+  assert.equal(await page.locator('#xpToggle').getAttribute('aria-expanded'),'true','XP banner expanded');
+  assert.equal(await page.locator('.nv-xp-stat').count(),2,'two compact metrics visible');
+  assert.equal(await page.locator('.nv-xp-progress-meta span').count(),2,'current and remaining XP visible');
+  const rect=await page.evaluate(()=>{
+   const card=document.querySelector('#xpMount .nv-xp-v2');
+   return {height:card.getBoundingClientRect().height,width:card.getBoundingClientRect().width,
+    progress:card.querySelector('.nv-xp-track').getBoundingClientRect().width,
+    extra:card.querySelector('.nv-xp-detail').getBoundingClientRect().height,
+    overflow:document.documentElement.scrollWidth>window.innerWidth+2};
+  });
+  assert(rect.progress>110&&rect.extra<135&&rect.height<265,'compact XP banner on mobile: '+JSON.stringify(rect));
+  assert(!rect.overflow,'no extra horizontal scrolling');
+  await page.locator('#xpToggle').click();
+  assert.equal(await page.locator('.nv-xp-stat').count(),0,'XP banner collapsed');
+
   await page.locator('[data-tab="topics"]').click();
   assert.equal(await page.locator('[data-topic-view]').count(),0,'legacy linked article tabs are gone');
   assert.equal(await page.locator('#nvTopicResults [data-open]').count(),750,'all saved topics shown independently');
