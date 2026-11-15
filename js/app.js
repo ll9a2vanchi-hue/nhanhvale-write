@@ -82,8 +82,25 @@ const xpTiers=[[1,'Người tập viết'],[5,'Người viết chăm chỉ'],[10
 function xpLevel(total=xp.total){let left=total||0,l=1;while(l<10000){const need=200+50*(l-1)+10*(l-1)**2;if(left<need)return {level:l,progress:left,need,title:xpTiers.filter(x=>x[0]<=l).at(-1)[1],next:xpTiers.find(x=>x[0]>l)};left-=need;l++}return {level:l,progress:0,need:1,title:'Đại văn hào'}}
 function xpPanel(){
  const total=nvXPDisplayTotal();
- if(total===null)return '<section class="nv-xp nv-xp-loading" aria-live="polite"><div class="nv-xp-toggle" role="status"><span class="nv-xp-mark">✒</span><span class="nv-xp-main"><strong>Đang đồng bộ cấp độ…</strong><small>Giữ nguyên XP đã tích lũy</small></span></div></section>';
- const x=xpLevel(total),pct=Math.min(100,100*x.progress/x.need);return `<section class="nv-xp"><button id="xpToggle" class="nv-xp-toggle" aria-expanded="${xp.expanded}"><span class="nv-xp-mark">✒</span><span class="nv-xp-main"><strong>Cấp ${x.level} <small>${x.title}</small></strong><span class="nv-xp-track"><i style="width:${pct}%"></i></span><small>${x.progress.toLocaleString('vi-VN')} / ${x.need.toLocaleString('vi-VN')} điểm XP</small></span><span>${xp.expanded?'⌃':'⌄'}</span></button>${xp.expanded?`<div class="nv-xp-detail"><div><small>Điểm XP tích lũy</small><b>${total.toLocaleString('vi-VN')}</b></div><div><small>Chữ hiện có</small><b>${words().toLocaleString('vi-VN')}</b></div><p>Còn ${(x.need-x.progress).toLocaleString('vi-VN')} điểm XP lên cấp ${x.level+1}${x.next?' · Danh hiệu tiếp: '+x.next[1]+' (cấp '+x.next[0]+')':''}</p></div>`:''}</section>`}
+ if(total===null)return '<section class="nv-xp nv-xp-v2 nv-xp-loading" aria-live="polite"><div class="nv-xp-toggle" role="status"><span class="nv-xp-mark" aria-hidden="true">✒</span><span class="nv-xp-main"><strong class="nv-xp-level">Đang đồng bộ cấp độ…</strong><small>Giữ nguyên XP đã tích lũy</small></span></div></section>';
+ const x=xpLevel(total),pct=Math.min(100,100*x.progress/x.need),remaining=Math.max(0,x.need-x.progress),fmt=n=>n.toLocaleString('vi-VN');
+ return `<section class="nv-xp nv-xp-v2">
+ <button id="xpToggle" type="button" class="nv-xp-toggle" aria-expanded="${!!xp.expanded}" aria-controls="nvXPExtra" aria-label="Cấp ${x.level}, ${esc(x.title)}. ${xp.expanded?'Thu gọn':'Mở rộng'} thông tin XP">
+  <span class="nv-xp-mark" aria-hidden="true">✒</span>
+  <span class="nv-xp-main">
+   <span class="nv-xp-head"><strong class="nv-xp-level">Cấp ${x.level}</strong><span class="nv-xp-rank">${esc(x.title)}</span></span>
+   <span class="nv-xp-track" role="progressbar" aria-label="Tiến độ lên cấp ${x.level+1}" aria-valuemin="0" aria-valuemax="${x.need}" aria-valuenow="${x.progress}"><i style="width:${pct}%"></i></span>
+   <span class="nv-xp-progress-meta"><span>${fmt(x.progress)} / ${fmt(x.need)} XP</span><span>Còn ${fmt(remaining)} XP</span></span>
+  </span>
+  <span class="nv-xp-chevron" aria-hidden="true">${xp.expanded?'⌃':'⌄'}</span>
+ </button>
+ ${xp.expanded?`<div class="nv-xp-detail" id="nvXPExtra">
+   <div class="nv-xp-stat"><small>XP tích lũy</small><b>${fmt(total)}</b></div>
+   <div class="nv-xp-stat"><small>Chữ hiện có</small><b>${fmt(words())}</b></div>
+   <p class="nv-xp-next"><span class="nv-xp-next-label">${x.next?'Danh hiệu tiếp theo':'Danh hiệu cao nhất'}</span><strong>${esc(x.next?x.next[1]:x.title)}${x.next?' · Cấp '+x.next[0]:''}</strong></p>
+  </div>`:''}
+ </section>`;
+}
 let nvPreviousXP=null;
 function refreshXP(){
  const el=document.querySelector('#xpMount');if(!el)return;
