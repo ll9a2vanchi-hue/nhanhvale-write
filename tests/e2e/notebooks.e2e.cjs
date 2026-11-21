@@ -72,10 +72,12 @@ const server=spawn(process.execPath,['tests/serve-with-headers.cjs','.','8157'],
   assert.equal(await page.locator('[data-nb="open"]').count(),1,'cancel leaves the library unchanged');
   await page.locator('[data-nb="new"]').click();
   await page.locator('[data-nb="choose-knowledge"]').click();
+  await page.waitForSelector('#nvBookBody');
   assert.equal(await page.evaluate(()=>window.nvNotebookUI.exportData().find(x=>x.kind==='knowledge')?.title),'Vở kiến thức 1','knowledge notebook one-tap creation');
   await page.locator('[data-nb="back"]').click();
   await page.locator('[data-nb="new"]').click();
   await page.locator('[data-nb="choose-free"]').click();
+  await page.waitForSelector('#nvBookBody');
   assert.equal(await page.evaluate(()=>window.nvNotebookUI.exportData().find(x=>x.kind==='free')?.title),'Vở tự do 1','free notebook one-tap creation');
   assert.equal(await page.evaluate(()=>window.nvNotebookUI.exportData().length),3,'all kinds save independently');
   assert.equal(nativeDialogs.length,0,'no browser prompts at any new-book step');
