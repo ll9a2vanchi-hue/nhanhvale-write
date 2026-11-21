@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const read=p=>fs.readFileSync(p,'utf8'),app=read('js/app.js'),html=read('index.html'),sw=read('sw.js'),ver=read('js/version.js'),workflow=read('.github/workflows/write-quality.yml');
-assert(ver.includes("'6.27.0'"),'version');
-assert(sw.includes("nv-write-v70"),'service worker cache');
+assert(ver.includes("'6.27.1'"),'version');
+assert(sw.includes("nv-write-v71"),'service worker cache');
 assert(html.includes('js/data-safety.js'),'safe helper');assert(html.includes('js/shadow-vault.js'),'separate backup script');assert(sw.includes('js/shadow-vault.js'),'offline shadow script');
 assert(app.includes('xp:{...xp},backupVersion:2'),'XP backup');
 assert(app.includes('window.nvDataSafety.validateBackup(JSON.parse'),'backup validation');
@@ -47,3 +47,7 @@ assert(html.includes('js/notebooks.js')&&html.includes('css/notebooks.css'),'not
 assert(sw.includes('js/notebooks.js')&&sw.includes('css/notebooks.css'),'notebook offline assets cached');
 assert(app.includes("tab==='notebooks'"),'notebooks route exists');
 assert(app.includes('window.nvNotebookActivity'),'notebooks XP bridge exists');
+
+const notebookSource=read('js/notebooks.js');
+assert(notebookSource.includes('nv-book-choice-sheet')&&notebookSource.includes('choose-writing')&&notebookSource.includes('choose-knowledge')&&notebookSource.includes('choose-free'),'one-tap choice sheet present');
+assert(!notebookSource.includes('Loại vở: 1 ='),'old numbered prompt removed');
