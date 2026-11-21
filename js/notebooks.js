@@ -68,7 +68,12 @@ function draftFlush(){
   if(changed&&!entry.failed)persist(changed,entry);
  }
 }
-function switcher(which){return '<div class="nv-book-switcher" aria-label="Khu vực viết">'+button('goto-topics','Chủ đề')+' '+button('goto-notebooks','Quyển vở')+'</div>'.replace('data-nb="goto-'+which+'"','data-nb="goto-'+which+'" class="active" aria-current="page"')}
+function switcher(which){
+ const active='class="active" aria-current="page"';
+ return '<div class="nv-book-switcher" aria-label="Khu vực viết">'+
+  button('goto-topics','Chủ đề',which==='topics'?active:'')+
+  button('goto-notebooks','Quyển vở',which==='notebooks'?active:'')+'</div>';
+}
 function titleSuggestion(kind){
  const base=kinds[kind];
  const existing=new Set(books.map(b=>b.title.toLocaleLowerCase('vi')));
@@ -109,7 +114,7 @@ function newBookChooser(){
   +button('choose-free','<span class="nv-book-choice-symbol" aria-hidden="true">✧</span><span class="nv-book-choice-text"><strong>Vở tự do</strong><small>Nhật ký, ý tưởng và những điều muốn viết</small></span><span class="nv-book-choice-arrow" aria-hidden="true">›</span>','class="nv-book-choice-card is-free" aria-pressed="false"')
   +'</div><button class="nv-book-primary nv-book-create-submit" type="submit">Tạo và viết</button></form></section></div>';
 }
-function notebookRows(){
+function notebookCovers(){
  const query=filter.toLocaleLowerCase('vi').trim();
  const arr=books.filter(b=>!!b.deleted===showTrash&&(showTrash||!!b.archived===showArchived)&&
   (!query||(b.title+' '+b.parts.map(s=>s.title+' '+s.text).join(' ')).toLocaleLowerCase('vi').includes(query)))
@@ -120,16 +125,20 @@ function notebookRows(){
  }
  return arr.map(b=>{
   const date=new Date(b.updated_at);
-  const updated=Number.isFinite(date.getTime())?' · '+dateFormat.format(date):'';
+  const updated=Number.isFinite(date.getTime())?dateFormat.format(date):'';
   const part=lastPart(b)?.title||'Chưa đặt tên phần';
   const cover=COLORS.includes(b.cover)?b.cover:COLORS[0];
-  return '<article class="nv-book-row">'+
-   (showTrash?'<div class="nv-book-row-open">': '<button class="nv-book-row-open" type="button" data-nb="open" data-id="'+esc(b.id)+'">')+
-   '<span class="nv-book-row-icon" style="--cover:'+cover+'" aria-hidden="true">▤</span>'+
-   '<span class="nv-book-row-text"><strong>'+esc(b.title)+(b.pinned?' <span class="nv-book-pin">· Đã ghim</span>':'')+'</strong>'+
-   '<small>'+esc(part+updated)+'</small></span>'+
+  const coverClass='class="nv-book-cover" style="--cover:'+cover+'"';
+  const coverStart=showTrash?'<div '+coverClass+'>':'<button type="button" '+coverClass+
+   ' data-nb="open" data-id="'+esc(b.id)+'" aria-label="Mở quyển '+esc(b.title)+'">';
+  return '<article class="nv-book-tile">'+coverStart+
+   '<span class="nv-book-cover-title">'+esc(b.title)+'</span>'+
+   (b.pinned?'<span class="nv-book-cover-pin">Đã ghim</span>':'')+
    (showTrash?'</div>':'</button>')+
-   '<button type="button" class="nv-book-row-menu" data-nb="menu" data-id="'+esc(b.id)+'" aria-label="Tùy chọn vở '+esc(b.title)+'">⋯</button></article>';
+   '<button type="button" class="nv-book-cover-menu" data-nb="menu" data-id="'+esc(b.id)+
+   '" aria-label="Tùy chọn vở '+esc(b.title)+'">⋯</button>'+
+   '<div class="nv-book-tile-meta"><strong>'+esc(part)+'</strong>'+
+   (updated?'<small>'+esc(updated)+'</small>':'')+'</div></article>';
  }).join('');
 }
 function catalog(){
@@ -139,7 +148,7 @@ function catalog(){
   '<div class="nv-book-filters">'+button('active','Đang dùng','aria-pressed="'+(!showArchived&&!showTrash)+'"')+
   button('archive-list','Lưu trữ','aria-pressed="'+(showArchived&&!showTrash)+'"')+
   button('trash-list','Thùng rác','aria-pressed="'+showTrash+'"')+'</div></div>'+
-  '<div class="nv-book-list" id="nvBookResults">'+notebookRows()+'</div>'+newBookChooser()+
+  '<div class="nv-book-grid" id="nvBookResults">'+notebookCovers()+'</div>'+newBookChooser()+
   '<div class="nv-book-help"><span>Vở được lưu trên thiết bị này.</span>'+button('export-all','Sao lưu vở','class="nv-book-link"')+
   button('import-all','Nhập bản sao lưu','class="nv-book-link"')+
   '<input hidden type="file" id="nvBookImport" accept=".json,application/json"></div></div>';
@@ -402,7 +411,7 @@ function bind(nav,rerender){navigate=nav;refresh=rerender;const rootEl=document.
  const search=rootEl.querySelector('#nvBookSearch');
  const updateSearch=()=>{
   filter=search.value;
-  rootEl.querySelector('#nvBookResults').innerHTML=notebookRows();
+  rootEl.querySelector('#nvBookResults').innerHTML=notebookCovers();
  };
  search?.addEventListener('input',e=>{if(!e.isComposing)updateSearch()});
  search?.addEventListener('compositionend',updateSearch);

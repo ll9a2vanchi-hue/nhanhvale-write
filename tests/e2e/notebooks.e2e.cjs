@@ -77,6 +77,10 @@ const server=spawn(process.execPath,['tests/serve-with-headers.cjs','.','8157'],
   });
   console.log('NOTEBOOK PERSISTENCE AFTER RELOAD:',JSON.stringify(diag));
   assert.equal(await page.locator('[data-nb="open"]').count(),1,'Notebook should be visible after reload '+JSON.stringify(diag));
+  const cover=page.getByRole('button',{name:'Mở quyển Sổ luyện viết mỗi ngày'});
+  const size=await cover.boundingBox();
+  assert(size.height>=165&&size.width>=150,'library displays a large tappable notebook cover on mobile');
+  assert.equal(await page.locator('[data-nb="goto-notebooks"]').getAttribute('aria-current'),'page');
   await page.locator('[data-nb="open"]').first().click();
   assert((await page.locator('#nvBookBody').innerText()).includes('Tôi viết mỗi ngày'),'notebook survives page reload');
   assert.equal(await page.locator('#nvBookTitle').inputValue(),'Sổ luyện viết mỗi ngày','rename survives reload');
@@ -129,7 +133,7 @@ const server=spawn(process.execPath,['tests/serve-with-headers.cjs','.','8157'],
   await page.locator('[data-nb="contents"]').click();
   await page.getByRole('button',{name:'Chương hai',exact:true}).click();
   await page.locator('[data-nb="back"]').click();
-  assert.match(await page.locator('.nv-book-list').innerText(),/Chương hai/);
+  assert.match(await page.locator('.nv-book-grid').innerText(),/Chương hai/);
   await page.locator('[data-tab="home"]').click();
   await page.locator('#nvBookContinue').click();
   assert.equal(await page.locator('#nvBookPartTitle').inputValue(),'Chương hai','Continue resumes last section');
