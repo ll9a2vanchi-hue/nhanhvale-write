@@ -312,7 +312,9 @@ function settings(){const cats=categoryNames();return `<div class="settings-page
 function account(){return `<div class="account-page"><div class="settings-title"><button class="settings-back" id="accountBack" aria-label="Quay lại">←</button><div><h2>Tài khoản</h2><p class="hint">Đăng nhập · Đồng bộ · Bảo vệ dữ liệu</p></div></div><div class="nv-account-summary"><div class="nv-account-avatar">✍</div><div class="nv-account-summary-main"><strong>NHANHVALE WRITE</strong><span id="accountStatus" role="status" aria-live="polite">Đang kiểm tra đăng nhập…</span></div><span id="nvAccountDot" class="nv-account-dot">Đang kiểm tra</span></div><section class="settings-group nv-account-auth"><h3>Đăng nhập</h3><p class="hint">Đăng nhập để đồng bộ bài viết giữa các thiết bị.</p><div id="nvAccountLoginForm"><button class="btn nv-google-btn" id="googleLogin" type="button">🌐 Tiếp tục với Google</button><div class="nv-account-separator"><span>hoặc qua email</span></div><label for="email">Địa chỉ email</label><input id="email" type="email" autocomplete="email" placeholder="ten@example.com" value="${esc(db.settings.email||'')}"><button class="btn nv-account-login" id="login">Gửi liên kết đăng nhập</button><p class="hint">Mở liên kết trong email để xác nhận đăng nhập.</p></div><button class="btn secondary nv-account-logout" id="logout" hidden>Đăng xuất tài khoản</button></section><section class="settings-group nv-account-sync"><div class="nv-account-section-head"><h3>Đồng bộ dữ liệu</h3><span class="nv-account-count">${db.syncQueue.length} đang chờ</span></div><p class="hint" id="syncInfo">Đăng nhập để bắt đầu đồng bộ.</p><p class="hint" id="nvLastSyncInfo">Lần đồng bộ thành công: ${(()=>{const v=localStorage.getItem("nv-write-last-sync");return v?esc(new Date(v).toLocaleString("vi-VN")):"Chưa có xác nhận"})()}</p><button class="btn secondary" id="sync">↻ Đồng bộ ngay</button><p class="hint">Bài viết vẫn lưu trên thiết bị khi ngoại tuyến. Chỉ xem là đã đồng bộ khi có xác nhận thành công.</p></section><section class="settings-group nv-account-backup"><h3>Bảo vệ dữ liệu</h3><p class="hint">Tạo bản sao lưu riêng trước khi đổi máy hoặc xóa dữ liệu trình duyệt.</p><button class="btn secondary" id="accountExport">⇩ Tải bản sao lưu JSON</button><p class="hint">Bao gồm bài viết và nhật ký ôn tập trên thiết bị. Nhật ký ôn tập được đồng bộ qua cloud khi đăng nhập và có mạng.</p></section></div>`}
 async function refreshAccount(){if(tab!=='account'||!document.querySelector('#accountStatus'))return;try{const c=await client(),{data:{user}}=await c.auth.getUser();document.querySelector('#accountStatus').textContent=user?(user.email||'Đã đăng nhập'):'Chưa đăng nhập';document.querySelector('#logout').hidden=!user;document.querySelector('#nvAccountLoginForm').hidden=!!user;const syncInfo=document.querySelector('#syncInfo');if(syncInfo)syncInfo.textContent=window.nvLastSyncError?'Lỗi gần nhất: '+window.nvLastSyncError:user?'Đã đăng nhập. Có thể đồng bộ dữ liệu.':'Đăng nhập để bắt đầu đồng bộ.';const dot=document.querySelector('#nvAccountDot');if(dot){dot.textContent=user?'Đã đăng nhập':'Chưa đăng nhập';dot.classList.toggle('online',!!user)}}catch(e){document.querySelector('#accountStatus').textContent='Chưa kết nối: '+e.message}}
 let nvHistoryReady=false,nvRestoringHistory=false,nvLastView='';
-function nvView(){return {tab,topicId:current?.id||null}}
+function nvView(){
+ return {tab,topicId:current?.id||null,notebookId:tab==='notebooks'?(window.nvNotebookUI?.editorId?.()||null):null};
+}
 function nvSaveBeforeBack(){window.nvFlushEditor?.()}
 // Keep one editor session alive until its DOM is replaced. Flush before navigation,
 // even when a click handler has already changed `current` to another topic.
@@ -360,7 +362,19 @@ function bindEditorDraft(el,t){
  window.nvEditorCleanup=()=>{flush(true);clearTimeout(timer);window.nvFlushEditor=null;window.nvEditorDirty=null;window.nvEditorTopic=null};
 }
 
-document.addEventListener('visibilitychange',()=>{if(document.hidden)nvSaveBeforeBack()});window.addEventListener('pagehide',nvSaveBeforeBack);window.addEventListener('freeze',nvSaveBeforeBack);window.addEventListener('popstate',e=>{nvSaveBeforeBack();const v=e.state?.nvWriteView;if(v){nvRestoringHistory=true;tab=v.tab||'home';current=v.topicId?db.topics.find(t=>t.id===v.topicId&&!t.deleted)||null:null;render();nvRestoringHistory=false}else{nvRestoringHistory=true;tab='home';current=null;render();nvRestoringHistory=false}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)nvSaveBeforeBack()});window.addEventListener('pagehide',nvSaveBeforeBack);window.addEventListener('freeze',nvSaveBeforeBack);window.addEventListener('popstate',e=>{
+ nvSaveBeforeBack();
+ const view=e.state?.nvWriteView;
+ nvRestoringHistory=true;
+ try{
+  tab=view?.tab||'home';
+  current=view?.topicId?db.topics.find(t=>t.id===view.topicId&&!t.deleted)||null:null;
+  window.nvNotebookUI?.restoreBook?.(tab==='notebooks'?view?.notebookId:null);
+  render();
+ }finally{
+  nvRestoringHistory=false;
+ }
+});
 let nvLastRenderedTopicId=null;
 function render(){if(nvInvalidLocalRaw!==null){
  const host=$('#content');if(host){host.innerHTML='<section class="card nv-recovery"><h2>⚠ Dữ liệu cần cứu hộ</h2><p>Dữ liệu trên máy không hợp lệ. Ứng dụng giữ nguyên bản gốc và tạm ngừng ghi để tránh mất bài viết.</p><button class="btn" id="nvRecoverDownload">Tải bản gốc</button> <button class="btn secondary" id="nvRecoverShadow">Xuất bản dự phòng gần nhất</button><p class="hint" id="nvRecoverInfo" role="status">Giữ file gốc và bản dự phòng trước khi khôi phục. Không có thao tác ghi đè tự động.</p></section>';host.querySelector('#nvRecoverDownload').onclick=()=>download('nhanhvale-write-recovery-'+new Date().toISOString().slice(0,10)+'.txt',nvInvalidLocalRaw,'text/plain');

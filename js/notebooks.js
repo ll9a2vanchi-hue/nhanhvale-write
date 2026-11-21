@@ -117,8 +117,8 @@ function renderContinue(){
 }
 function resume(go){
  const b=recentBook();
- if(b){openBook(b.id,go);return}
  go();
+ if(b)openBook(b.id);
 }
 function newBookChooser(){
  if(!chooserOpen)return '';
@@ -276,17 +276,23 @@ function writer(){
 }
 
 function html(){if(!ready)return '<div class="nv-book-ui"><div class="card">Đang mở thư viện quyển vở…</div></div>';if(failed)return '<div class="nv-book-ui"><div class="card">⚠ '+esc(failed)+'. Chưa chỉnh sửa dữ liệu cũ.</div></div>';return selected?writer():catalog()}
-function openBook(id,render=refresh){
+function restoreBook(id){
  chooserOpen=false;
+ rememberPosition(document.querySelector('#nvBookBody'));
  draftFlush();
- selected=id;
- const b=book();
- if(!b){selected=null;render();return}
- const part=lastPart(b);
- sectionId=part.id;
- baseText=part.text||'';
- try{localStorage.setItem(recentKey,b.id)}catch{}
- render();
+ const b=books.find(book=>book.id===id&&!book.deleted);
+ selected=b?.id||null;
+ const part=b&&lastPart(b);
+ sectionId=part?.id||null;
+ baseText=part?.text||'';
+ composing=false;
+}
+function openBook(id){
+ restoreBook(id);
+ if(selected){
+  try{localStorage.setItem(recentKey,selected)}catch{}
+ }
+ refresh();
  window.scrollTo(0,0);
 }
 async function create(kind,title){
@@ -434,7 +440,10 @@ function bind(nav,rerender){navigate=nav;refresh=rerender;const rootEl=document.
   return;
  }
  case 'open':openBook(id);return;
- case 'back':rememberPosition(body);draftFlush();selected=null;refresh();return;
+ case 'back':
+  if(root.history.state?.nvWriteView?.notebookId===selected)root.history.back();
+  else{restoreBook(null);refresh()}
+  return;
  case 'active':showTrash=false;showArchived=false;refresh();return;
  case 'archive-list':showTrash=false;showArchived=true;refresh();return;
  case 'trash-list':showTrash=true;showArchived=false;refresh();return;
@@ -702,9 +711,8 @@ function wordCount(){return books.filter(b=>!b.deleted&&!b.archived).reduce((n,b
 channel?.addEventListener('message',async()=>{if(!selected&&!chooserOpen&&!pending.size&&db){try{books=await getAll();if(document.querySelector('.nv-book-ui'))refresh();renderContinue()}catch{}}});
 document.addEventListener('keydown',e=>{if(!chooserOpen)return;if(e.key==='Escape'){e.preventDefault();closeChooser();return}if(e.key==='Tab'){const items=[...document.querySelectorAll('.nv-book-choice-sheet :is(input,button):not([disabled])')];if(!items.length)return;const i=items.indexOf(document.activeElement);if(e.shiftKey&&i<=0){e.preventDefault();items[items.length-1].focus()}else if(!e.shiftKey&&i===items.length-1){e.preventDefault();items[0].focus()}}});
 document.addEventListener('click',e=>{if(chooserOpen&&e.target.closest('#tabs [data-tab],#settingsBtn,#accountBtn'))chooserOpen=false},true);
-root.addEventListener('popstate',()=>{chooserOpen=false});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)draftFlush()});
 root.addEventListener('pagehide',()=>draftFlush());
-root.nvNotebookUI={html,bind,switcher,isEditing,flush:draftFlush,exportData,importData,wordCount,continueHTML,resume,cleanup};
+root.nvNotebookUI={html,bind,switcher,isEditing,flush:draftFlush,exportData,importData,wordCount,continueHTML,resume,cleanup,restoreBook,editorId:()=>selected};
 load();
 })(window);
