@@ -1,6 +1,8 @@
 // Icons, sound, toasts
 (()=>{
 const paths={
+home:'<path d="m3 10 9-7 9 7v10h-6v-6H9v6H3z"/>',
+chart:'<path d="M4 20h16M6 16V10m6 6V5m6 11V8"/>',
 pen:'<path d="m12 19 7-7 3 3-7 7-4 1 1-4ZM18 13l3 3M4 6h10M4 11h7M4 16h5"/>',
 flame:'<path d="M12 22c4 0 7-3 7-7 0-3-2-5-3-6 0 3-2 4-2 4 0-5-3-8-5-10 0 5-4 7-4 12 0 4 3 7 7 7Z"/>',
 book:'<path d="M4 5c3-1 5-1 8 1 3-2 5-2 8-1v14c-3-1-5-1-8 1-3-2-5-2-8-1V5ZM12 6v14"/>',
@@ -19,6 +21,11 @@ arrow:'<path d="m9 5 7 7-7 7"/>'
 };
 const map={'✍':'pen','🔥':'flame','📚':'book','⚙':'settings','🎲':'shuffle','🔁':'repeat','📌':'pin','✓':'check','⧉':'copy','←':'back','◐':'half','○':'circle','›':'arrow'};
 const svg=name=>'<svg class="nv-icon" viewBox="0 0 24 24" aria-hidden="true">'+paths[name]+'</svg>';
+const tabIcons={home:'home',topics:'pen',notebooks:'book',review:'repeat',awards:'chart'};
+document.querySelectorAll('#tabs [data-tab]').forEach(button=>{
+ const icon=tabIcons[button.dataset.tab];
+ if(icon)button.insertAdjacentHTML('afterbegin',svg(icon));
+});
 function icons(root){
  if(!root)return;
  const walk=document.createTreeWalker(root,NodeFilter.SHOW_ELEMENT|NodeFilter.SHOW_TEXT,{acceptNode(node){

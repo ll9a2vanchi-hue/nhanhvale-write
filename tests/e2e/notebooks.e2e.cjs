@@ -20,11 +20,16 @@ const server=spawn(process.execPath,['tests/serve-with-headers.cjs','.','8157'],
   await page.setViewportSize({width:320,height:800});
   const tabs=await page.locator('#tabs [data-tab]').evaluateAll(buttons=>buttons.map(button=>{
    const {top,width,height}=button.getBoundingClientRect();
-   return {label:button.textContent,top,width,height,fits:button.scrollWidth<=button.clientWidth};
+   const icon=button.querySelector('svg[aria-hidden="true"]');
+   return {label:button.textContent,top,width,height,icon:!!icon,fits:button.scrollWidth<=button.clientWidth};
   }));
   assert.deepEqual(tabs.map(tab=>tab.label),['Tổng quan','Viết','Vở','Ôn tập','Thành tích']);
-  assert(tabs.every(tab=>tab.top===tabs[0].top&&tab.width>=44&&tab.height>=44&&tab.fits),
-   'five readable tabs fit in one row at 320px');
+  assert(tabs.every(tab=>tab.top===tabs[0].top&&tab.width>=44&&Math.abs(tab.width-tabs[0].width)<1&&tab.height>=44&&tab.icon&&tab.fits),
+   'five equal icon tabs fit in one row at 320px');
+  const bottomTabs=page.locator('#tabs');
+  const navBounds=await bottomTabs.evaluate(el=>({position:getComputedStyle(el).position,distance:innerHeight-el.getBoundingClientRect().bottom}));
+  assert.equal(navBounds.position,'fixed');
+  assert(Math.abs(navBounds.distance)<1,'navigation stays at the bottom of the viewport');
   await page.setViewportSize({width:390,height:844});
   await page.locator('[data-tab="topics"]').click();
   assert.equal(await page.locator('#nvTopicResults [data-open]').count(),1,'legacy topic remains visible');
@@ -53,6 +58,7 @@ const server=spawn(process.execPath,['tests/serve-with-headers.cjs','.','8157'],
    selection.addRange(range);
   });
   await page.waitForSelector('#nvBookBody');
+  assert.equal(await bottomTabs.isVisible(),false,'editing leaves room for the formatting dock');
   const editorBox=await page.locator('#nvBookBody').boundingBox();
   assert(editorBox.y<=178,'compact mobile header leaves room for content: '+editorBox.y);
   const toolbarBox=await page.locator('.nv-book-top').boundingBox();
