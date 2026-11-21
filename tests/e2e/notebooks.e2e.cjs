@@ -17,9 +17,18 @@ const server=spawn(process.execPath,['tests/serve-with-headers.cjs','.','8157'],
   const page=await ctx.newPage(),errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto(BASE,{waitUntil:'domcontentloaded'});
+  await page.setViewportSize({width:320,height:800});
+  const tabs=await page.locator('#tabs [data-tab]').evaluateAll(buttons=>buttons.map(button=>{
+   const {top,width,height}=button.getBoundingClientRect();
+   return {label:button.textContent,top,width,height,fits:button.scrollWidth<=button.clientWidth};
+  }));
+  assert.deepEqual(tabs.map(tab=>tab.label),['Tổng quan','Viết','Vở','Ôn tập','Thành tích']);
+  assert(tabs.every(tab=>tab.top===tabs[0].top&&tab.width>=44&&tab.height>=44&&tab.fits),
+   'five readable tabs fit in one row at 320px');
+  await page.setViewportSize({width:390,height:844});
   await page.locator('[data-tab="topics"]').click();
   assert.equal(await page.locator('#nvTopicResults [data-open]').count(),1,'legacy topic remains visible');
-  await page.locator('[data-nb="goto-notebooks"]').click();
+  await page.locator('[data-tab="notebooks"]').click();
   await page.waitForSelector('[data-nb="new"]');
   const nativeDialogs=[];
   page.on('dialog',async d=>{nativeDialogs.push(d.message());await d.dismiss()});
@@ -99,8 +108,7 @@ const server=spawn(process.execPath,['tests/serve-with-headers.cjs','.','8157'],
   await page.locator('[data-nb="back"]').click();
   await page.waitForTimeout(550);
   await page.reload({waitUntil:'domcontentloaded'});
-  await page.locator('[data-tab="topics"]').click();
-  await page.locator('[data-nb="goto-notebooks"]').click();
+  await page.locator('[data-tab="notebooks"]').click();
   await page.waitForTimeout(1000);
   const diag=await page.evaluate(async()=>{
     const open=await new Promise((resolve,reject)=>{const q=indexedDB.open('nv-write-notebooks-v1',1);q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error)});
@@ -112,7 +120,7 @@ const server=spawn(process.execPath,['tests/serve-with-headers.cjs','.','8157'],
   const cover=page.getByRole('button',{name:'Mở quyển Sổ luyện viết mỗi ngày'});
   const size=await cover.boundingBox();
   assert(size.height>=165&&size.width>=150,'library displays a large tappable notebook cover on mobile');
-  assert.equal(await page.locator('[data-nb="goto-notebooks"]').getAttribute('aria-current'),'page');
+  assert.equal(await page.locator('[data-tab="notebooks"]').getAttribute('aria-current'),'page');
   await page.locator('[data-nb="open"]').first().click();
   assert((await page.locator('#nvBookBody').innerText()).includes('Tôi viết mỗi ngày'),'notebook survives page reload');
   assert.equal(await page.locator('#nvBookTitle').inputValue(),'Sổ luyện viết mỗi ngày','rename survives reload');

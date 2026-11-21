@@ -30,7 +30,7 @@ const short=s=>String(s||'').replace(/[\\/:*?"<>|\u0000-\u001f]/g,'-').slice(0,7
 let db=null,books=[],ready=false,failed='',selected=null,sectionId=null,page=0,filter='',showArchived=false,showTrash=false;
 let chooserOpen=false,creating=false;
 const pending=new Map();
-let view=localStorage.getItem('nv-nb-mode')==='flip'?'flip':'scroll',navigate=()=>{},refresh=()=>{},baseText='',composing=false;
+let view=localStorage.getItem('nv-nb-mode')==='flip'?'flip':'scroll',refresh=()=>{},baseText='',composing=false;
 const button=(action,label,extra='')=>'<button type="button" data-nb="'+action+'" '+extra+'>'+label+'</button>';
 function openDB(){return new Promise((res,rej)=>{if(!root.indexedDB)return rej(Error('Trình duyệt không hỗ trợ IndexedDB'));const req=indexedDB.open(NAME,1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(STORE))req.result.createObjectStore(STORE,{keyPath:'id'})};req.onsuccess=()=>res(req.result);req.onerror=()=>rej(req.error||Error('Không mở được dữ liệu quyển vở'));req.onblocked=()=>rej(Error('Hãy đóng các tab Write khác và thử tải lại'))})}
 function getAll(){return new Promise((res,rej)=>{const t=db.transaction(STORE,'readonly'),r=t.objectStore(STORE).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error)})}
@@ -87,12 +87,6 @@ function draftFlush(){
   const changed=books.find(item=>item.id===id);
   if(changed&&!entry.failed)persist(changed,entry);
  }
-}
-function switcher(which){
- const active='class="active" aria-current="page"';
- return '<div class="nv-book-switcher" aria-label="Khu vực viết">'+
-  button('goto-topics','Chủ đề',which==='topics'?active:'')+
-  button('goto-notebooks','Quyển vở',which==='notebooks'?active:'')+'</div>';
 }
 function titleSuggestion(kind){
  const base=kinds[kind];
@@ -162,7 +156,7 @@ function notebookCovers(){
  }).join('');
 }
 function catalog(){
- return '<div class="nv-book-ui">'+switcher('notebooks')+
+ return '<div class="nv-book-ui">'+
   '<div class="nv-book-header"><h2>Quyển vở</h2>'+button('new','+ Tạo vở','class="nv-book-main"')+'</div>'+
   '<div class="nv-book-controls"><input id="nvBookSearch" type="search" autocomplete="off" placeholder="Tìm tên vở, phần hoặc nội dung…" value="'+esc(filter)+'" aria-label="Tìm quyển vở">'+
   '<div class="nv-book-filters">'+button('active','Đang dùng','aria-pressed="'+(!showArchived&&!showTrash)+'"')+
@@ -423,10 +417,8 @@ function applyBorder(body,range,color){
  selectOffsets(body,offsets);
  return true;
 }
-function bind(nav,rerender){navigate=nav;refresh=rerender;const rootEl=document.querySelector('.nv-book-ui');if(!rootEl)return;
+function bind(rerender){refresh=rerender;const rootEl=document.querySelector('.nv-book-ui');if(!rootEl)return;
  rootEl.addEventListener('click',async e=>{const el=e.target.closest('button[data-nb]');if(!el)return;const action=el.dataset.nb,id=el.dataset.id;switch(action){
- case 'goto-topics':draftFlush();selected=null;navigate('topics');return;
- case 'goto-notebooks':draftFlush();selected=null;navigate('notebooks');return;
  case 'new':chooserOpen=true;refresh();document.querySelector('[data-nb="choose-writing"]')?.focus({preventScroll:true});return;
  case 'cancel-new':closeChooser();return;
  case 'choose-writing':case 'choose-knowledge':case 'choose-free':{
@@ -713,6 +705,6 @@ document.addEventListener('keydown',e=>{if(!chooserOpen)return;if(e.key==='Escap
 document.addEventListener('click',e=>{if(chooserOpen&&e.target.closest('#tabs [data-tab],#settingsBtn,#accountBtn'))chooserOpen=false},true);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)draftFlush()});
 root.addEventListener('pagehide',()=>draftFlush());
-root.nvNotebookUI={html,bind,switcher,isEditing,flush:draftFlush,exportData,importData,wordCount,continueHTML,resume,cleanup,restoreBook,editorId:()=>selected};
+root.nvNotebookUI={html,bind,isEditing,flush:draftFlush,exportData,importData,wordCount,continueHTML,resume,cleanup,restoreBook,editorId:()=>selected};
 load();
 })(window);

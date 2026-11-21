@@ -1,9 +1,6 @@
 /* Notebook workspace — kept separate from legacy article design. */
 .nv-book-ui{max-width:850px;margin:0 auto;padding:0 0 26px;color:var(--ink,#17212f)}
 .nv-book-ui *{box-sizing:border-box}
-.nv-book-switcher{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:5px;margin:0 0 16px;border-radius:14px;background:#e7edf3}
-.nv-book-switcher button{border:0;border-radius:10px;background:transparent;color:#667387;min-height:39px;font-weight:750}
-.nv-book-switcher button.active{background:#fff;color:#233c57;box-shadow:0 2px 6px #233c5714}
 .nv-book-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:13px 0 18px}
 .nv-book-header h2{font-size:clamp(19px,5vw,24px);letter-spacing:-.035em;margin:0 0 5px}
 .nv-book-header p{font-size:12px;color:#8592a2;margin:0}
@@ -30,8 +27,8 @@ body.writing-mode #xpMount{display:none}
 body.writing-mode #content:has(.nv-book-ui) .nv-book-ui{min-height:100dvh}
 body.writing-mode #content:has(.nv-book-ui){background:var(--surface,#fff)}
 html[data-theme="dark"] .nv-book-ui{color:#e4eaf3}
-html[data-theme="dark"] .nv-book-switcher,html[data-theme="dark"] .nv-book-modes{background:#293344}
-html[data-theme="dark"] .nv-book-switcher button.active,html[data-theme="dark"] .nv-book-modes .active{background:#40516a;color:#fff}
+html[data-theme="dark"] .nv-book-modes{background:#293344}
+html[data-theme="dark"] .nv-book-modes .active{background:#40516a;color:#fff}
 html[data-theme="dark"] .nv-book-filters button{color:#c8d3e0}
 html[data-theme="dark"] .nv-book-filters button[aria-pressed=true]{background:#314961;color:#fff}
 
@@ -124,7 +121,6 @@ html[data-theme="dark"] .nv-book-format-dock button{background:#35445a;border-co
 .nv-notebook-library #xpMount .nv-xp-v2 .nv-xp-mark{width:31px;height:31px;flex-basis:31px;font-size:17px}
 .nv-notebook-library #xpMount .nv-xp-v2 .nv-xp-level{font-size:15px}
 .nv-notebook-library #xpMount .nv-xp-v2 .nv-xp-track{height:4px}
-.nv-book-switcher button.active{background:#203c5b;color:#fff}
 .nv-book-grid{
  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px 16px;
 }
