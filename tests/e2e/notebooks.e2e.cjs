@@ -21,10 +21,18 @@ const server=spawn(process.execPath,['tests/serve-with-headers.cjs','.','8157'],
   assert.equal(await page.locator('#nvTopicResults [data-open]').count(),1,'legacy topic remains visible');
   await page.locator('[data-nb="goto-notebooks"]').click();
   await page.waitForSelector('[data-nb="new"]');
-  const dialogs=['Nhật ký mới','1'];
-  page.on('dialog',async d=>{const response=dialogs.shift();await d.accept(response)});
+  const nativeDialogs=[];
+  page.on('dialog',async d=>{nativeDialogs.push(d.message());await d.dismiss()});
   await page.locator('[data-nb="new"]').click();
+  await page.waitForSelector('.nv-book-choice-sheet');
+  assert.equal(await page.locator('.nv-book-choice-card').count(),3,'three notebook types visible');
+  assert.equal(await page.locator('#nvBookBody').count(),0,'picker does not open editor before choice');
+  assert.equal(await page.locator('.nv-book-choice-sheet').getAttribute('aria-modal'),'true','accessible modal picker');
+  await page.locator('[data-nb="choose-writing"]').click();
   await page.waitForSelector('#nvBookBody');
+  assert.equal(nativeDialogs.length,0,'no native browser prompts for creation');
+  assert.equal(await page.locator('#nvBookPart').count(),1,'new book opens in editor');
+  assert((await page.locator('.nv-book-top-title strong').textContent()).startsWith('Vở luyện viết'),'automatic name after one tap');
   assert.equal(await page.locator('[data-nb="scroll"]').getAttribute('aria-pressed'),'true','continuous mode is default');
   await page.locator('#nvBookBody').fill('Tôi viết mỗi ngày để ghi lại những ý tưởng mới và học hỏi.');
   await page.locator('#nvBookBody').evaluate(el=>el.blur());
@@ -57,8 +65,24 @@ const server=spawn(process.execPath,['tests/serve-with-headers.cjs','.','8157'],
   const snapshot=await page.evaluate(()=>({legacy:JSON.parse(localStorage.getItem('nv-write-v1')).topics,notebooks:window.nvNotebookUI.exportData()}));
   assert.equal(snapshot.legacy.length,1);
   assert.equal(snapshot.notebooks.length,1);
+  await page.locator('[data-nb="back"]').click();
+  await page.locator('[data-nb="new"]').click();
+  await page.locator('[data-nb="cancel-new"]').click();
+  assert.equal(await page.locator('.nv-book-choice-sheet').count(),0,'cancel closes picker without creating a book');
+  assert.equal(await page.locator('[data-nb="open"]').count(),1,'cancel leaves the library unchanged');
+  await page.locator('[data-nb="new"]').click();
+  await page.locator('[data-nb="choose-knowledge"]').click();
+  await page.waitForSelector('#nvBookBody');
+  assert.equal(await page.evaluate(()=>window.nvNotebookUI.exportData().find(x=>x.kind==='knowledge')?.title),'Vở kiến thức 1','knowledge notebook one-tap creation');
+  await page.locator('[data-nb="back"]').click();
+  await page.locator('[data-nb="new"]').click();
+  await page.locator('[data-nb="choose-free"]').click();
+  await page.waitForSelector('#nvBookBody');
+  assert.equal(await page.evaluate(()=>window.nvNotebookUI.exportData().find(x=>x.kind==='free')?.title),'Vở tự do 1','free notebook one-tap creation');
+  assert.equal(await page.evaluate(()=>window.nvNotebookUI.exportData().length),3,'all kinds save independently');
+  assert.equal(nativeDialogs.length,0,'no browser prompts at any new-book step');
   assert.deepEqual(errors,[],'no browser errors');
-  console.log('PASS: notebooks open, save, flip, reload, XP and legacy isolation');
+  console.log('PASS: one-tap type cards, cancel, all notebook kinds, save, flip, reload, XP and legacy isolation');
   await ctx.close();
  }catch(e){console.error(e.stack||e);process.exitCode=1}
  finally{await browser?.close();server.kill()}
