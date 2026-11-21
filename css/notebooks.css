@@ -69,13 +69,13 @@ html[data-theme="dark"] .nv-book-choice-text small{color:#b0bfd0}
 
 /* v6.27.2 — mirror the Write article writing surface while keeping notebook data separate. */
 .nv-book-writing.write-screen{max-width:none;width:100%;padding:0;display:flex;flex-direction:column;background:var(--paper,#fff);color:#273447;min-height:100dvh}
-.nv-book-writing .nv-book-top.write-toolbar{width:100%;min-height:50px;position:sticky;top:0;z-index:22;border-radius:0;box-shadow:none;background:#fffffff5;gap:4px;padding:5px 10px}
+.nv-book-writing .nv-book-top.write-toolbar{width:100%;min-height:calc(45px + env(safe-area-inset-top,0px))!important;position:sticky;top:0;z-index:22;border-radius:0;box-shadow:none;background:#fffffff5;gap:4px;padding:env(safe-area-inset-top,0px) 8px 0}
 .nv-book-top .nv-book-save{flex:1;color:#75859a;text-align:left;min-width:0;margin-left:4px;font-size:12px;font-weight:600}
 .nv-book-top .nv-book-top-count{font-size:12px;color:#8391a0;white-space:nowrap;max-width:92px}
-.nv-book-top .tool-btn{min-width:38px;height:39px;flex:0 0 auto;border-radius:10px;font-size:22px}
+.nv-book-top .tool-btn{min-width:44px;height:44px;flex:0 0 auto;border-radius:10px;font-size:22px}
 .nv-book-menu .write-menu-panel{top:45px}
 .nv-book-menu-action{display:block;width:100%;text-align:left;min-height:39px;margin:6px 0!important}
-.nv-book-write-options{display:flex;align-items:center;gap:10px;padding:8px 14px;max-width:850px;width:100%;margin:0 auto;background:#fff}
+.nv-book-write-options{display:flex;align-items:center;gap:8px;padding:2px 14px;max-width:850px;width:100%;margin:0 auto;background:#fff}
 .nv-book-write-options .nv-book-modes{flex:0 0 auto;margin:0;gap:3px}
 .nv-book-write-options .nv-book-modes button{min-height:31px;min-width:57px;font-size:11px;font-weight:750;padding:6px 9px}
 .nv-book-paper-popover[hidden]{display:none!important}
@@ -86,13 +86,11 @@ html[data-theme="dark"] .nv-book-choice-text small{color:#b0bfd0}
 .nv-book-paper-swatch{display:block;width:24px;height:24px;background:var(--swatch);border-radius:7px;border:1px solid #dbe2e9}
 .nv-book-document.write-document{width:min(100%,850px);margin:0 auto;display:flex;flex-direction:column;flex:1;padding:18px 18px 14px;background-color:var(--paper,#fff)!important;min-height:0}
 .nv-book-document .write-info-strip{flex:0 0 auto;background:transparent}
-.nv-book-document .nv-book-title.editor-title{display:block;width:100%;min-height:48px!important;padding:5px 0 9px!important;border:0!important;outline:none!important;resize:none;overflow:hidden;background:transparent!important;color:#1e2b3e;font-size:clamp(21px,5.2vw,29px);font-weight:800;line-height:1.32}
+.nv-book-document .nv-book-title.editor-title{display:block;width:100%;min-height:32px!important;padding:4px 0!important;border:0!important;outline:none!important;resize:none;overflow:hidden;background:transparent!important;color:#1e2b3e;font-size:clamp(17px,4.7vw,22px);font-weight:800;line-height:1.25}
 .nv-book-document .nv-book-title.editor-title:focus{outline:none;border:0!important;box-shadow:none}
-.nv-book-info-chips{display:flex;gap:6px;margin:4px 0 12px;flex-wrap:wrap}
-.nv-book-info-chips .inline-chip{min-height:29px;padding:6px 9px;background:#f2f5f9;border-color:#e4e9ef;color:#54657a}
-.nv-book-document #nvBookPartTitle{display:block;width:100%;padding:5px 0 7px;margin:0;background:transparent;border:0;border-bottom:1px solid #e7edf3;border-radius:0;outline:none;color:#506079;font-size:13px;font-weight:700;min-height:35px}
+.nv-book-document #nvBookPartTitle{display:block;width:100%;padding:2px 0 4px;margin:0;background:transparent;border:0;border-bottom:1px solid #e7edf3;border-radius:0;outline:none;color:#506079;font-size:14px;font-weight:700;min-height:32px}
 .nv-book-document #nvBookPartTitle:focus{border-bottom-color:#7a9fc2;box-shadow:none;outline:none}
-.nv-book-document #nvBookBody.nv-book-rich-editor{display:block;flex:0 0 auto;box-sizing:border-box;min-height:240px;height:58dvh;width:100%;padding:12px 0 20px;outline:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;color:#273447;font-size:17px;line-height:1.85;white-space:pre-wrap;overflow-wrap:anywhere;overflow-y:auto;overflow-x:hidden;resize:none}
+.nv-book-document #nvBookBody.nv-book-rich-editor{display:block;flex:1 0 auto;box-sizing:border-box;min-height:240px;height:58dvh;width:100%;padding:6px 0 20px;outline:none!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent!important;color:#273447;font-size:17px;line-height:1.85;white-space:pre-wrap;overflow-wrap:anywhere;overflow-y:auto;overflow-x:hidden;resize:none}
 .nv-book-document #nvBookBody:empty:before{content:attr(data-placeholder);color:#a2aebd;pointer-events:none}
 .nv-book-document #nvBookBody:focus{outline:none!important}
 .nv-book-document #nvBookBody.nv-book-flip-editor{height:clamp(240px,52dvh,660px);min-height:0;flex:0 0 auto;overflow-x:auto!important;overflow-y:hidden!important;column-count:1;column-gap:0;column-fill:auto;scrollbar-width:none;overscroll-behavior-x:contain}
@@ -110,7 +108,7 @@ html[data-theme="dark"] .nv-book-document #nvBookBody.nv-book-rich-editor,html[d
 html[data-theme="dark"] .nv-book-paper-popover{background:#293747;border-color:#405066}
 html[data-theme="dark"] .nv-book-format-dock button{background:#35445a;border-color:#455670;color:#eaf1f8}
 @media(min-width:700px){.nv-book-document #nvBookBody.nv-book-rich-editor{font-size:19px}.nv-book-writing .nv-book-format-dock{justify-content:center}.nv-book-format-dock .nv-book-dock-spacer{flex:0 0 40px}}
-@media(max-width:420px){.nv-book-write-options{gap:6px;padding:7px 10px}.nv-book-write-options .nv-book-modes button{min-width:51px;padding:6px}.nv-book-document.write-document{padding:14px 16px}.nv-book-format-dock{gap:5px}.nv-book-format-dock button{min-width:35px}}
+@media(max-width:420px){.nv-book-write-options{gap:5px;padding-inline:10px}.nv-book-write-options .nv-book-modes button{min-width:51px;padding:6px}.nv-book-document.write-document{padding:14px 16px}.nv-book-format-dock{gap:5px}.nv-book-format-dock button{min-width:35px}}
 
 #nvBookContinueMount:empty{display:none}
 .nv-book-continue{
@@ -181,9 +179,11 @@ html[data-theme="dark"] .nv-book-format-dock button{background:#35445a;border-co
  background:var(--card-bg,#fff);color:inherit;border:1px solid var(--line,#dbe3ec);
 }
 .nv-book-ui .nv-book-primary{background:#203c5b;color:#fff;border:1px solid #203c5b}
-.nv-book-title-row{display:flex;gap:8px;align-items:flex-start}
+.nv-book-title-row{display:flex;gap:4px;align-items:center}
 .nv-book-title-row textarea{flex:1;min-width:0}
-.nv-book-ui .nv-book-rename{flex:0 0 44px;font-size:21px}
+.nv-book-ui .nv-book-rename{
+ flex:0 0 40px;min-height:40px;padding:0;font-size:18px;border-color:transparent;background:transparent;
+}
 .nv-book-ui :is(button,summary,input,textarea):focus-visible{outline:2px solid #5a89c1;outline-offset:-2px}
 .nv-book-document .nv-book-title.editor-title:focus-visible{box-shadow:inset 0 -2px #5a89c1}
 .nv-book-dialog{
@@ -210,7 +210,7 @@ html[data-theme="dark"] .nv-book-format-dock button{background:#35445a;border-co
 .nv-book-pager[hidden]{display:none}
 .nv-book-pager button{min-height:44px}
 .nv-book-format-dock button{min-width:40px;height:42px}
-body.writing-mode .nv-book-document.write-document{margin:6px auto 10px;padding-bottom:12px}
+body.writing-mode .nv-book-document.write-document{flex:1 0 auto;margin:3px auto 6px;padding-top:0;padding-bottom:8px}
 html[data-theme=dark] .nv-book-document.write-document{background-color:color-mix(in srgb,var(--paper-d,#172131) 95%,var(--paper,#fff))!important}
 html[data-theme=dark] .nv-book-dialog{background:#1f2937;color:#f0f5fc}
 html[data-theme=dark] .nv-book-pager button{background:#29384b;color:#edf3fa;border-color:#40516a}
@@ -224,8 +224,7 @@ html[data-theme=dark] .nv-book-help .nv-book-link{color:#b8d5ff}
  .nv-book-format-dock{justify-content:center}
 }
 @media(max-width:340px){
- .nv-book-write-options{flex-wrap:wrap}
- .nv-book-write-options .nv-book-modes{margin-left:0}
+ .nv-book-write-options .nv-book-modes button{min-width:44px;padding-inline:4px}
 }
 
 .nv-book-choice-card[aria-pressed=true]{border-color:#668aaf;box-shadow:inset 0 0 0 1px #668aaf}

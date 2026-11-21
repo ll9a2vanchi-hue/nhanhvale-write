@@ -198,7 +198,7 @@ function writer(){
   +button('copy','⧉','class="tool-btn" title="Sao chép phần này" aria-label="Sao chép phần này"')
   +'<details class="write-menu nv-book-menu"><summary class="tool-btn" aria-label="Tùy chọn quyển vở">⋮</summary>'
   +'<div class="write-menu-panel">'
-  +'<div class="write-menu-heading">Quyển vở</div>'
+  +'<div class="write-menu-heading">'+esc(kindLabel)+' · '+b.parts.length+' phần</div>'
   +button('rename','✎ Sửa tên vở','class="btn secondary nv-book-menu-action"')
   +'<div class="write-menu-heading">Xuất nội dung</div>'
   +button('export','⇩ Xuất TXT hoặc Markdown','class="btn outline nv-book-menu-action"')
@@ -217,7 +217,6 @@ function writer(){
   +'<div class="write-info-strip">'
   +'<div class="nv-book-title-row"><textarea id="nvBookTitle" class="editor-title nv-book-title" rows="1" maxlength="120" spellcheck="false" aria-label="Tên quyển vở, chạm để sửa" placeholder="Tên quyển vở…">'+esc(b.title)+'</textarea>'
   +button('rename','✎','class="nv-book-rename" title="Đổi tên vở" aria-label="Đổi tên vở"')+'</div>'
-  +'<div class="nv-book-info-chips"><span class="inline-chip">'+esc(kindLabel)+'</span><span class="inline-chip">✎ '+b.parts.length+' phần</span></div>'
   +'<input id="nvBookPartTitle" class="nv-book-part-title" maxlength="120" aria-label="Tên phần hoặc chương" value="'+esc(s.title)+'" placeholder="Tên phần hoặc chương…">'
   +'</div>'
   +'<div id="nvBookBody" class="rich-editor nv-book-rich-editor'+(view==='flip'?' nv-book-flip-editor':'')+'" contenteditable="true" role="textbox" aria-multiline="true" spellcheck="true" aria-label="Nội dung phần trong quyển vở" data-placeholder="Bắt đầu viết nội dung…">'+notebookRich(s)+'</div>'
@@ -449,7 +448,7 @@ function bind(nav,rerender){navigate=nav;refresh=rerender;const rootEl=document.
  }
  const title=rootEl.querySelector('#nvBookTitle');
  if(title){
-  const resize=()=>{title.style.height='auto';title.style.height=Math.max(48,title.scrollHeight)+'px'};
+  const resize=()=>{title.style.height='auto';title.style.height=title.scrollHeight+'px'};
   resize();
   title.addEventListener('input',()=>{const b=book();if(!b)return;const next=title.value.slice(0,120);b.title=next;save(b);resize()});
   title.addEventListener('blur',()=>{const b=book();if(!b)return;if(!b.title.trim()){b.title='Quyển vở chưa đặt tên';title.value=b.title;save(b)}});

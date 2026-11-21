@@ -32,6 +32,13 @@ const server=spawn(process.execPath,['tests/serve-with-headers.cjs','.','8157'],
   await page.locator('#nvBookNewTitle').fill('Nhật ký học viết');
   await page.locator('#nvBookCreateForm button[type="submit"]').click();
   await page.waitForSelector('#nvBookBody');
+  const editorBox=await page.locator('#nvBookBody').boundingBox();
+  assert(editorBox.y<=178,'compact mobile header leaves room for content: '+editorBox.y);
+  const toolbarBox=await page.locator('.nv-book-top').boundingBox();
+  assert(toolbarBox.height<=48,'top toolbar stays compact');
+  await page.locator('.nv-book-menu summary').click();
+  assert.match(await page.locator('.nv-book-menu').innerText(),/Luyện viết · XP · 1 phần/);
+  await page.locator('.nv-book-menu summary').click();
   assert.equal(nativeDialogs.length,0,'no native browser prompts for creation');
   assert.equal(await page.locator('[data-nb="contents"]').count(),1,'new book opens in editor');
   assert.equal(await page.locator('#nvBookTitle').inputValue(),'Nhật ký học viết','custom title survives creation');
