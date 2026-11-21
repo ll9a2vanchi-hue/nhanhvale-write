@@ -44,7 +44,14 @@ const server=spawn(process.execPath,['tests/serve-with-headers.cjs','.','8157'],
   await page.reload({waitUntil:'domcontentloaded'});
   await page.locator('[data-tab="topics"]').click();
   await page.locator('[data-nb="goto-notebooks"]').click();
-  await page.waitForSelector('[data-nb="open"]');
+  await page.waitForTimeout(1000);
+  const diag=await page.evaluate(async()=>{
+    const open=await new Promise((resolve,reject)=>{const q=indexedDB.open('nv-write-notebooks-v1',1);q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error)});
+    const saved=await new Promise((resolve,reject)=>{const q=open.transaction('books','readonly').objectStore('books').getAll();q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error)});
+    return {saved:saved.map(x=>({id:x.id,title:x.title,deleted:x.deleted,archived:x.archived})),memory:window.nvNotebookUI.exportData(),rendered:document.querySelector('#content')?.innerText.slice(0,700),tab:(document.querySelector('#tabs .active')?.textContent)};
+  });
+  console.log('NOTEBOOK PERSISTENCE AFTER RELOAD:',JSON.stringify(diag));
+  assert.equal(await page.locator('[data-nb="open"]').count(),1,'Notebook should be visible after reload '+JSON.stringify(diag));
   await page.locator('[data-nb="open"]').first().click();
   assert((await page.locator('#nvBookBody').inputValue()).includes('Tôi viết mỗi ngày'),'notebook survives page reload');
   const snapshot=await page.evaluate(()=>({legacy:JSON.parse(localStorage.getItem('nv-write-v1')).topics,notebooks:window.nvNotebookUI.exportData()}));
