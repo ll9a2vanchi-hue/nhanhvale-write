@@ -31,6 +31,18 @@ const server=spawn(process.execPath,['tests/serve-with-headers.cjs','.','8157'],
   assert.match(await page.locator('#nvBookNewTitle').inputValue(),/^Vở luyện viết/,'a title is filled in');
   await page.locator('#nvBookNewTitle').fill('Nhật ký học viết');
   await page.locator('#nvBookCreateForm button[type="submit"]').click();
+  const top=page.locator('.nv-book-top');
+  const showTop=async()=>{
+   const toggle=page.getByRole('button',{name:'Hiện phần đầu'});
+   if(await toggle.isVisible())await toggle.click();
+  };
+  const selectAllText=()=>page.locator('#nvBookBody').evaluate(el=>{
+   const range=document.createRange();
+   range.selectNodeContents(el);
+   const selection=window.getSelection();
+   selection.removeAllRanges();
+   selection.addRange(range);
+  });
   await page.waitForSelector('#nvBookBody');
   const editorBox=await page.locator('#nvBookBody').boundingBox();
   assert(editorBox.y<=178,'compact mobile header leaves room for content: '+editorBox.y);
@@ -48,13 +60,23 @@ const server=spawn(process.execPath,['tests/serve-with-headers.cjs','.','8157'],
   await page.locator('#nvBookTitle').evaluate(el=>el.blur());
   assert.equal(await page.evaluate(()=>window.nvNotebookUI.exportData()[0].title),'Sổ luyện viết mỗi ngày','inline title edit saves in notebook state');
   assert.equal(await page.locator('[data-nb="scroll"]').getAttribute('aria-pressed'),'true','continuous mode is default');
+  await page.locator('#nvBookBody').tap();
+  assert.equal(await top.isVisible(),false,'a tap on the article hides the header');
+  await showTop();
+  assert.equal(await top.isVisible(),true,'bottom shortcut restores the header');
   await page.locator('#nvBookBody').fill('Tôi viết mỗi ngày để ghi lại những ý tưởng mới và học hỏi.');
-  await page.locator('#nvBookBody').evaluate(el=>{
-   const selection=window.getSelection(),range=document.createRange();
-   range.selectNodeContents(el);selection.removeAllRanges();selection.addRange(range);
-  });
+  assert.equal(await top.isVisible(),false,'typing hides the header');
+  assert((await page.locator('#nvBookBody').boundingBox()).y<20,'focus mode gives the article the space above it');
+  await selectAllText();
   await page.locator('[data-nb-format="bold"]').click();
-  assert((await page.locator('#nvBookBody').innerHTML()).match(/<(b|strong)>/i),'Write-like bold formatting works');
+  assert.match(await page.locator('#nvBookBody').innerHTML(),/<(b|strong)>/i,'bold works');
+  await selectAllText();
+  await page.locator('[data-nb="palette"]').click();
+  await page.getByRole('button',{name:'Màu chữ Đỏ',exact:true}).click();
+  await selectAllText();
+  await page.locator('[data-nb="palette"]').click();
+  await page.getByRole('button',{name:'Viền Xanh dương',exact:true}).click();
+  assert.match(await page.locator('#nvBookBody').innerHTML(),/data-nv-border="blue"/,'selection can be outlined');
   assert((await page.locator('#nvBookBody').innerText()).includes('Tôi viết mỗi ngày'),'formatting does not lose text');
   await page.locator('#nvBookBody').evaluate(el=>el.blur());
   await page.waitForTimeout(800);
@@ -64,7 +86,10 @@ const server=spawn(process.execPath,['tests/serve-with-headers.cjs','.','8157'],
   assert.equal(result.books[0].parts[0].text,'Tôi viết mỗi ngày để ghi lại những ý tưởng mới và học hỏi.');
   assert.equal(result.books[0].title,'Sổ luyện viết mỗi ngày','title persisted');
   assert(result.books[0].parts[0].richHtml.includes('<b>')||result.books[0].parts[0].richHtml.includes('<strong>'),'rich formatting persisted in notebook record');
+  assert.match(result.books[0].parts[0].richHtml,/data-nv-ink="red"/,'ink persisted');
+  assert.match(result.books[0].parts[0].richHtml,/data-nv-border="blue"/,'outline persisted');
   assert(result.xp>0,'new words in writing-type notebook gain XP');
+  await showTop();
   await page.locator('[data-nb="flip"]').click();
   assert.equal(await page.locator('[data-nb="flip"]').getAttribute('aria-pressed'),'true','flip mode selected');
   assert((await page.locator('#nvBookBody').innerText()).includes('Tôi viết mỗi ngày'),'same content in flip mode');
@@ -92,6 +117,15 @@ const server=spawn(process.execPath,['tests/serve-with-headers.cjs','.','8157'],
   assert((await page.locator('#nvBookBody').innerText()).includes('Tôi viết mỗi ngày'),'notebook survives page reload');
   assert.equal(await page.locator('#nvBookTitle').inputValue(),'Sổ luyện viết mỗi ngày','rename survives reload');
   assert((await page.locator('#nvBookBody').innerHTML()).match(/<(b|strong)>/i),'rich text survives reload');
+  assert.equal(await page.locator('#nvBookBody [data-nv-ink="red"]').count()>0,true,'ink survives reload');
+  assert.equal(await page.locator('#nvBookBody [data-nv-border="blue"]').count()>0,true,'outline survives reload');
+  await page.locator('#nvBookBody').tap();
+  await selectAllText();
+  await page.locator('[data-nb="palette"]').click();
+  await page.getByRole('button',{name:'Bỏ viền',exact:true}).click();
+  assert.equal(await page.locator('#nvBookBody [data-nv-border]').count(),0,'outline can be removed');
+  assert.equal(await page.locator('#nvBookBody [data-nv-ink="red"]').count()>0,true,'removing outline keeps ink');
+  await showTop();
   const snapshot=await page.evaluate(()=>({legacy:JSON.parse(localStorage.getItem('nv-write-v1')).topics,notebooks:window.nvNotebookUI.exportData()}));
   assert.equal(snapshot.legacy.length,1);
   assert.equal(snapshot.notebooks.length,1);
@@ -120,11 +154,20 @@ const server=spawn(process.execPath,['tests/serve-with-headers.cjs','.','8157'],
   assert.equal(await body.evaluate(el=>document.activeElement===el),true,'new section is ready to type');
   assert.equal(await page.locator('#nvBookPartTitle').inputValue(),'Chương hai');
   await body.fill(Array.from({length:100},(_,i)=>'Đoạn '+(i+1)+' có nội dung dài để kiểm tra vị trí khi đổi chế độ.').join('\n'));
+  const longText=await body.innerText();
+  await selectAllText();
+  await page.locator('[data-nb="palette"]').click();
+  await page.getByRole('button',{name:'Viền Xanh lá',exact:true}).click();
+  assert.equal(await body.innerText(),longText,'outlining multiple lines keeps their text and line breaks');
+  await page.locator('[data-nb-format="undo"]').click();
+  assert.equal(await body.locator('[data-nv-border]').count(),0,'native undo removes the outline');
+  assert.equal(await body.innerText(),longText,'undo keeps document text');
   await body.evaluate(el=>{
    el.blur();
    window.getSelection().removeAllRanges();
    el.scrollTop=el.scrollHeight/2;
   });
+  await showTop();
   await page.locator('[data-nb="flip"]').click();
   const count=page.locator('#nvBookPageCount');
   let [current,total]=(await count.innerText()).split(' / ').map(Number);

@@ -2,6 +2,22 @@
 (function(root){
 'use strict';
 const NAME='nv-write-notebooks-v1',STORE='books',COLORS=['#476d91','#668b77','#a77d58','#8573ae','#af6d76','#5b8193'];
+const INKS={
+ default:['Mặc định','#273447','#ecf1f7'],
+ blue:['Xanh dương','#1d4ed8','#93c5fd'],
+ green:['Xanh lá','#166534','#86efac'],
+ red:['Đỏ','#b91c1c','#fca5a5'],
+ purple:['Tím','#6d28d9','#d8b4fe'],
+ amber:['Nâu cam','#92400e','#fcd34d']
+};
+const inkByColor=new Map();
+for(const [name,[,light,dark]] of Object.entries(INKS)){
+ for(const hex of [light,dark]){
+  const rgb=hex.slice(1).match(/../g).map(channel=>parseInt(channel,16)).join(',');
+  inkByColor.set(hex,name);
+  inkByColor.set('rgb('+rgb+')',name);
+ }
+}
 const kinds={writing:'Vở luyện viết',knowledge:'Vở kiến thức',free:'Vở tự do'};
 const dateFormat=new Intl.DateTimeFormat('vi-VN',{dateStyle:'short',timeStyle:'short'});
 const positions=new WeakMap();
@@ -29,7 +45,11 @@ function mark(label){
  const e=document.querySelector('#nvBookStatus');
  if(e)e.textContent=label;
  const retry=document.querySelector('[data-nb="retry-save"]');
- if(retry)retry.hidden=!pending.get(selected)?.failed;
+ if(retry){
+  const failed=pending.get(selected)?.failed;
+  retry.hidden=!failed;
+  if(failed)document.querySelector('.nv-book-focused [data-nb="focus-mode"]')?.click();
+ }
 }
 async function persist(b,entry){
  clearTimeout(entry.timer);
@@ -155,7 +175,7 @@ function catalog(){
 }
 function sanitizeNotebookRich(markup){
  const holder=document.createElement('template');holder.innerHTML=String(markup||'');
- const accepted=new Set(['BR','DIV','P','SPAN','B','STRONG','I','EM','U','S','STRIKE','UL','OL','LI','BLOCKQUOTE','HR']);
+ const accepted=new Set(['BR','DIV','P','SPAN','B','STRONG','I','EM','U','S','STRIKE','UL','OL','LI','BLOCKQUOTE','HR','FONT']);
  const banned=new Set(['SCRIPT','STYLE','IFRAME','OBJECT','EMBED','SVG','MATH','FORM','INPUT','TEXTAREA','BUTTON','IMG','VIDEO','AUDIO','LINK','META']);
  const walk=node=>{
   for(const child of [...node.childNodes]){
@@ -164,7 +184,13 @@ function sanitizeNotebookRich(markup){
    if(banned.has(child.tagName)){child.remove();continue}
    walk(child);
    if(!accepted.has(child.tagName)){child.replaceWith(...child.childNodes);continue}
+   const ink=child.getAttribute('data-nv-ink');
+   const border=child.getAttribute('data-nv-border');
+   const rawColor=child.style.color||child.getAttribute('color')||'';
+   const color=Object.hasOwn(INKS,ink)?ink:inkByColor.get(rawColor.toLowerCase().replaceAll(' ',''));
    for(const attr of [...child.attributes])child.removeAttribute(attr.name);
+   if(color)child.setAttribute('data-nv-ink',color);
+   if(Object.hasOwn(INKS,border))child.setAttribute('data-nv-border',border);
   }
  };
  walk(holder.content);return holder.innerHTML;
@@ -181,6 +207,19 @@ function sectionDialogs(b,s){
   '<form id="nvBookPartForm"><label for="nvBookPartName">Tên phần</label>'+
   '<input id="nvBookPartName" maxlength="120" value="Phần '+(b.parts.length+1)+'" required autofocus>'+
   '<button type="submit" class="nv-book-primary">Tạo và viết</button></form></dialog>';
+}
+function palette(type){
+ return Object.entries(INKS).map(([name,[label]])=>
+  '<button type="button" data-nb-'+type+'="'+name+'" data-nv-swatch="'+name+'" aria-label="'+
+  (type==='ink'?'Màu chữ ':'Viền ')+label+'"></button>').join('');
+}
+function formatPalette(){
+ return '<div id="nvBookPalette" class="nv-book-palette" hidden>'+
+  '<div class="nv-book-palette-group" role="group" aria-label="Màu chữ"><strong>Màu chữ</strong>'+
+  '<div>'+palette('ink')+'</div></div>'+
+  '<div class="nv-book-palette-group" role="group" aria-label="Tô viền"><strong>Tô viền</strong>'+
+  '<div>'+palette('border')+'<button type="button" data-nb-border="none" aria-label="Bỏ viền">×</button></div></div>'+
+  '<p class="nv-book-palette-hint" role="status"></p></div>';
 }
 function writer(){
  const b=book();if(!b)return catalog();
@@ -222,12 +261,15 @@ function writer(){
   +'<div id="nvBookBody" class="rich-editor nv-book-rich-editor'+(view==='flip'?' nv-book-flip-editor':'')+'" contenteditable="true" role="textbox" aria-multiline="true" spellcheck="true" aria-label="Nội dung phần trong quyển vở" data-placeholder="Bắt đầu viết nội dung…">'+notebookRich(s)+'</div>'
   +'</div>'
   +'<div class="nv-book-dock"><div class="nv-book-pager"'+(view==='flip'?'':' hidden')+'>'+button('prev','‹ Trang trước','disabled')+'<span id="nvBookPageCount">1 / 1</span>'+button('next','Trang sau ›','disabled')+'</div>'
+  +formatPalette()
   +'<div class="nv-book-format-dock" role="toolbar" aria-label="Định dạng khi viết">'
   +'<button type="button" data-nb-format="bold" title="In đậm" aria-label="In đậm"><b>B</b></button>'
   +'<button type="button" data-nb-format="italic" title="In nghiêng" aria-label="In nghiêng"><i>I</i></button>'
   +'<button type="button" data-nb-format="underline" title="Gạch chân" aria-label="Gạch chân"><u>U</u></button>'
   +'<button type="button" data-nb-format="insertUnorderedList" title="Danh sách dấu chấm" aria-label="Danh sách dấu chấm">☷</button>'
+  +button('palette','<span aria-hidden="true">A</span>','class="nv-book-palette-toggle" title="Màu chữ và tô viền" aria-label="Màu chữ và tô viền" aria-expanded="false" aria-controls="nvBookPalette"')
   +'<span class="nv-book-dock-spacer"></span>'
+  +button('focus-mode','˄','class="nv-book-focus-toggle" title="Thu gọn phần đầu" aria-label="Thu gọn phần đầu" aria-pressed="false"')
   +'<button type="button" data-nb-format="undo" title="Hoàn tác" aria-label="Hoàn tác">↶</button>'
   +'<button type="button" data-nb-format="redo" title="Làm lại" aria-label="Làm lại">↷</button>'
   +'</div></div>'+sectionDialogs(b,s)+'</div>';
@@ -324,6 +366,57 @@ function restorePosition(body){
   offset-=node.length;
  }
 }
+function offsetsOf(body,range){
+ const prefix=document.createRange();
+ prefix.selectNodeContents(body);
+ prefix.setEnd(range.startContainer,range.startOffset);
+ const start=prefix.toString().length;
+ return [start,start+range.toString().length];
+}
+function selectOffsets(body,[start,end]){
+ const range=document.createRange();
+ const walker=document.createTreeWalker(body,NodeFilter.SHOW_TEXT);
+ let at=0,started=false;
+ for(let node=walker.nextNode();node;node=walker.nextNode()){
+  const next=at+node.length;
+  if(!started&&start<=next){range.setStart(node,start-at);started=true}
+  if(started&&end<=next){
+   range.setEnd(node,end-at);
+   const selection=root.getSelection();
+   selection.removeAllRanges();
+   selection.addRange(range);
+   return;
+  }
+  at=next;
+ }
+}
+function applyBorder(body,range,color){
+ const ancestor=range.commonAncestorContainer;
+ const existing=(ancestor.nodeType===Node.ELEMENT_NODE?ancestor:ancestor.parentElement)?.closest('[data-nv-border]');
+ if(existing&&body.contains(existing))range.selectNode(existing);
+ if(range.collapsed||!range.toString().trim())return false;
+ const offsets=offsetsOf(body,range);
+ const content=document.createElement('div');
+ content.append(range.cloneContents());
+ content.querySelectorAll('[data-nv-border]').forEach(el=>el.removeAttribute('data-nv-border'));
+ if(color!=='none'){
+  const walker=document.createTreeWalker(content,NodeFilter.SHOW_TEXT);
+  const textNodes=[];
+  for(let node=walker.nextNode();node;node=walker.nextNode())if(node.data.trim())textNodes.push(node);
+  for(const node of textNodes){
+   const span=document.createElement('span');
+   span.dataset.nvBorder=color;
+   node.replaceWith(span);
+   span.append(node);
+  }
+ }
+ const selection=root.getSelection();
+ selection.removeAllRanges();
+ selection.addRange(range);
+ if(!document.execCommand('insertHTML',false,content.innerHTML))return false;
+ selectOffsets(body,offsets);
+ return true;
+}
 function bind(nav,rerender){navigate=nav;refresh=rerender;const rootEl=document.querySelector('.nv-book-ui');if(!rootEl)return;
  rootEl.addEventListener('click',async e=>{const el=e.target.closest('button[data-nb]');if(!el)return;const action=el.dataset.nb,id=el.dataset.id;switch(action){
  case 'goto-topics':draftFlush();selected=null;navigate('topics');return;
@@ -364,6 +457,8 @@ function bind(nav,rerender){navigate=nav;refresh=rerender;const rootEl=document.
   return;
  }
  case 'prev':case 'next':body.scrollTo({left:(page+(action==='next'?1:-1))*body.clientWidth,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});return;
+ case 'palette':togglePalette();return;
+ case 'focus-mode':setFocusMode(!rootEl.classList.contains('nv-book-focused'));return;
  case 'contents':showContents();return;
  case 'close-dialog':el.closest('dialog').close();return;
  case 'add-part':{
@@ -455,6 +550,35 @@ function bind(nav,rerender){navigate=nav;refresh=rerender;const rootEl=document.
  }
  rootEl.querySelector('#nvBookPartTitle')?.addEventListener('input',e=>{const b=book(),p=section();if(!b||!p)return;p.title=e.target.value.slice(0,120);save(b)});
  const body=rootEl.querySelector('#nvBookBody');
+ const palettePanel=rootEl.querySelector('#nvBookPalette');
+ let paletteRange=null;
+ function setFocusMode(active){
+  if(!body||rootEl.classList.contains('nv-book-focused')===active)return;
+  const anchor=view==='flip'?currentAnchor(body):null;
+  const toggle=rootEl.querySelector('[data-nb="focus-mode"]');
+  const label=active?'Hiện phần đầu':'Thu gọn phần đầu';
+  rootEl.classList.toggle('nv-book-focused',active);
+  toggle.textContent=active?'⌄':'˄';
+  toggle.title=label;
+  toggle.setAttribute('aria-label',label);
+  toggle.setAttribute('aria-pressed',String(active));
+  if(view==='flip'){revealAnchor(body,anchor);paging()}
+ }
+ function editorRange(){
+  const selection=root.getSelection();
+  if(selection?.rangeCount&&body.contains(selection.anchorNode)&&body.contains(selection.focusNode)){
+   return selection.getRangeAt(0).cloneRange();
+  }
+  return null;
+ }
+ function togglePalette(force){
+  if(!palettePanel)return;
+  const open=force??palettePanel.hidden;
+  if(open)paletteRange=editorRange();
+  palettePanel.hidden=!open;
+  rootEl.querySelector('[data-nb="palette"]').setAttribute('aria-expanded',String(open));
+  if(open)palettePanel.querySelector('.nv-book-palette-hint').textContent='';
+ }
  const paging=()=>{
   if(!body||view!=='flip')return;
   const width=body.clientWidth||1;
@@ -466,6 +590,41 @@ function bind(nav,rerender){navigate=nav;refresh=rerender;const rootEl=document.
  };
  if(body){
   let pasteIntent=false;
+  body.addEventListener('click',()=>{setFocusMode(true);togglePalette(false)});
+  body.addEventListener('input',()=>setFocusMode(true));
+  rootEl.addEventListener('keydown',e=>{
+   if(e.key!=='Escape'||e.defaultPrevented||e.target.closest('dialog'))return;
+   if(!palettePanel.hidden){togglePalette(false);e.preventDefault()}
+   else if(rootEl.classList.contains('nv-book-focused')){setFocusMode(false);e.preventDefault()}
+  });
+  rootEl.querySelector('[data-nb="palette"]').addEventListener('pointerdown',e=>e.preventDefault());
+  palettePanel.addEventListener('pointerdown',e=>{if(e.target.closest('button'))e.preventDefault()});
+  palettePanel.addEventListener('click',e=>{
+   const action=e.target.closest('button');
+   if(!action)return;
+   const range=paletteRange&&body.contains(paletteRange.commonAncestorContainer)?paletteRange:editorRange();
+   const hint=palettePanel.querySelector('.nv-book-palette-hint');
+   if(!range){
+    hint.textContent='Chạm vào nội dung hoặc bôi đen chữ để định dạng.';
+    return;
+   }
+   body.focus({preventScroll:true});
+   const selection=root.getSelection();
+   selection.removeAllRanges();
+   selection.addRange(range);
+   if(action.dataset.nbBorder){
+    if(!applyBorder(body,range,action.dataset.nbBorder)){
+     hint.textContent='Bôi đen đoạn muốn tô viền hoặc đặt con trỏ vào đoạn đã có viền.';
+     return;
+    }
+   }else{
+    const ink=INKS[action.dataset.nbInk];
+    const dark=document.documentElement.dataset.theme==='dark';
+    document.execCommand('foreColor',false,ink[dark?2:1]);
+   }
+   record({inputType:'format'});
+   togglePalette(false);
+  });
   const refreshCount=()=>{
    const b=book();if(!b)return;
    const countText=b.parts.reduce((n,p)=>n+words(p.text),0).toLocaleString('vi-VN')+' chữ';
