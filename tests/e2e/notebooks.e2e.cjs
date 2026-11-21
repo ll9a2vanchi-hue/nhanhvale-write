@@ -27,7 +27,7 @@ const server=spawn(process.execPath,['tests/serve-with-headers.cjs','.','8157'],
   await page.waitForSelector('#nvBookBody');
   assert.equal(await page.locator('[data-nb="scroll"]').getAttribute('aria-pressed'),'true','continuous mode is default');
   await page.locator('#nvBookBody').fill('Tôi viết mỗi ngày để ghi lại những ý tưởng mới và học hỏi.');
-  await page.locator('#nvBookBody').blur();
+  await page.locator('#nvBookBody').evaluate(el=>el.blur());
   await page.waitForTimeout(800);
   const result=await page.evaluate(()=>({article:JSON.parse(localStorage.getItem('nv-write-v1')).topics[0],xp:JSON.parse(localStorage.getItem('nv-write-xp-v1')).total,books:window.nvNotebookUI.exportData()}));
   assert.equal(result.article.content,'Nội dung cũ giữ nguyên','legacy content unchanged');
