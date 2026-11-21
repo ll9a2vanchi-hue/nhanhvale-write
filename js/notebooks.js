@@ -21,7 +21,7 @@ async function persist(b){try{if(!db)throw Error('Bộ nhớ chưa sẵn sàng')
 function save(b){b.updated_at=now();dirty=true;mark('Đang lưu…');clearTimeout(timer);timer=setTimeout(()=>persist(b),450)}
 function book(){return books.find(b=>b.id===selected&&!b.deleted)||null}
 function section(){const b=book();return b?.parts?.find(p=>p.id===sectionId)||b?.parts?.[0]||null}
-function draftFlush(){clearTimeout(root.nvNotebookXPTimeout);if(!selected)return;const b=book(),s=section();if(!b||!s)return;clearTimeout(timer);timer=0;if(s.text!==baseText){if(b.kind==='writing')root.nvNotebookActivity?.(b.id,s.id,baseText,s.text,true);baseText=s.text}if(dirty)persist(b)}
+function draftFlush(){root.nvBookResizeCleanup?.();root.nvBookResizeCleanup=null;clearTimeout(root.nvNotebookXPTimeout);if(!selected)return;const b=book(),s=section();if(!b||!s)return;clearTimeout(timer);timer=0;if(s.text!==baseText){if(b.kind==='writing')root.nvNotebookActivity?.(b.id,s.id,baseText,s.text,true);baseText=s.text}if(dirty)persist(b)}
 function switcher(which){return '<div class="nv-book-switcher" aria-label="Khu vực viết">'+button('goto-topics','Chủ đề')+' '+button('goto-notebooks','Quyển vở')+'</div>'.replace('data-nb="goto-'+which+'"','data-nb="goto-'+which+'" class="active" aria-current="page"')}
 function pagesOf(text){
  const s=String(text||'');if(!s)return [{start:0,end:0}];
@@ -46,14 +46,74 @@ function catalog(){
  const cards=arr.map(b=>'<article class="nv-book-card" data-book="'+esc(b.id)+'"><button type="button" class="nv-book-cover" data-nb="open" data-id="'+esc(b.id)+'" style="--cover:'+(COLORS.includes(b.cover)?b.cover:COLORS[0])+'" aria-label="Mở quyển '+esc(b.title)+'"><span class="nv-book-spine"></span><span class="nv-book-glyph" aria-hidden="true">✎</span><strong>'+esc(b.title)+'</strong></button><div class="nv-book-card-foot"><span>'+(b.parts||[]).length+' phần · '+(b.parts||[]).reduce((n,p)=>n+words(p.text),0)+' chữ</span><button type="button" data-nb="menu" data-id="'+esc(b.id)+'" aria-label="Tùy chọn vở '+esc(b.title)+'">⋯</button></div></article>').join('');
  return '<div class="nv-book-ui">'+switcher('notebooks')+'<div class="nv-book-header"><div><h2>Thư viện quyển vở</h2><p>Viết liền mạch, đọc như một cuốn sách.</p></div>'+button('new','+ Tạo vở','class="nv-book-main"')+'</div><div class="nv-book-controls"><input id="nvBookSearch" type="search" autocomplete="off" placeholder="Tìm quyển vở hoặc nội dung…" value="'+esc(filter)+'" aria-label="Tìm quyển vở"><div class="nv-book-filters">'+button('active','Đang dùng',!showArchived&&!showTrash?'class="active"':'')+button('archive-list','Lưu trữ',showArchived&&!showTrash?'class="active"':'')+button('trash-list','Thùng rác',showTrash?'class="active"':'')+'</div></div>'+(cards?'<div class="nv-book-grid">'+cards+'</div>':'<div class="nv-book-empty">Chưa có quyển vở nào ở đây. Tạo quyển đầu tiên để bắt đầu viết.</div>')+newBookChooser()+'<div class="nv-book-help">Dữ liệu quyển vở được lưu riêng trên thiết bị này. '+button('export-all','Sao lưu tất cả vở','class="nv-book-link"')+' · '+button('import-all','Nhập bản sao lưu','class="nv-book-link"')+'<input hidden type="file" id="nvBookImport" accept=".json,application/json"></div></div>';
 }
+function sanitizeNotebookRich(markup){
+ const holder=document.createElement('template');holder.innerHTML=String(markup||'');
+ const accepted=new Set(['BR','DIV','P','SPAN','B','STRONG','I','EM','U','S','STRIKE','UL','OL','LI','BLOCKQUOTE','HR']);
+ const banned=new Set(['SCRIPT','STYLE','IFRAME','OBJECT','EMBED','SVG','MATH','FORM','INPUT','TEXTAREA','BUTTON','IMG','VIDEO','AUDIO','LINK','META']);
+ const walk=node=>{
+  for(const child of [...node.childNodes]){
+   if(child.nodeType===8){child.remove();continue}
+   if(child.nodeType!==1)continue;
+   if(banned.has(child.tagName)){child.remove();continue}
+   walk(child);
+   if(!accepted.has(child.tagName)){child.replaceWith(...child.childNodes);continue}
+   for(const attr of [...child.attributes])child.removeAttribute(attr.name);
+  }
+ };
+ walk(holder.content);return holder.innerHTML;
+}
+function notebookRich(part){return part.richHtml?sanitizeNotebookRich(part.richHtml):esc(part.text||'').replace(/\n/g,'<br>')}
 function writer(){
  const b=book();if(!b)return catalog();
  const s=section();if(!s)return catalog();
- const pieces=pagesOf(s.text);page=Math.max(0,Math.min(page,pieces.length-1));pageSpan=pieces[page];
- const contents=view==='flip'?s.text.slice(pageSpan.start,pageSpan.end):s.text;
- const wordCount=b.parts.reduce((n,p)=>n+words(p.text),0);
- return '<div class="nv-book-ui nv-book-writing"><div class="nv-book-top">'+button('back','‹','class="nv-book-back" aria-label="Quay lại thư viện"')+'<div class="nv-book-top-title"><strong>'+esc(b.title)+'</strong><small id="nvBookStatus">✓ Đã lưu trên thiết bị</small></div>'+button('export','⇩','title="Xuất quyển vở" aria-label="Xuất quyển vở"')+'</div><div class="nv-book-editor-controls"><select id="nvBookPart" aria-label="Chọn phần trong vở">'+b.parts.map(p=>'<option value="'+esc(p.id)+'"'+(p.id===s.id?' selected':'')+'>'+esc(p.title||'Không có tiêu đề')+'</option>').join('')+'</select>'+button('add-part','+ Phần','title="Thêm phần mới"')+'<div class="nv-book-modes">'+button('scroll','Cuộn',view==='scroll'?'class="active" aria-pressed="true"':'aria-pressed="false"')+button('flip','Lật trang',view==='flip'?'class="active" aria-pressed="true"':'aria-pressed="false"')+'</div></div><div class="nv-book-sheet"><div class="nv-book-page-meta"><span>NHANHVALE WRITE</span><span>'+ (view==='flip'?'Trang '+(page+1)+'/'+pieces.length:'Viết liên tục')+'</span></div><input id="nvBookPartTitle" aria-label="Tiêu đề phần" value="'+esc(s.title)+'" placeholder="Tên phần / chương…"><textarea id="nvBookBody" spellcheck="true" aria-label="Nội dung quyển vở" placeholder="Bắt đầu viết ở đây…">'+esc(contents)+'</textarea></div>'+(view==='flip'?'<div class="nv-book-pager">'+button('prev','‹ Trang trước',page===0?'disabled':'')+'<span>'+(page+1)+' / '+pieces.length+'</span>'+button('next','Trang sau ›',page===pieces.length-1?'disabled':'')+'</div>':'')+'<div class="nv-book-editor-footer"><span id="nvBookWords">'+wordCount.toLocaleString('vi-VN')+' chữ · '+b.parts.length+' phần</span><span>'+(b.kind==='writing'?'Luyện viết · tính XP cho chữ mới':'Ghi chép · không tính XP')+'</span></div></div>';
+ const totalWords=b.parts.reduce((n,p)=>n+words(p.text),0);
+ const paper=['#ffffff','#fffdf7','#f6f8ff','#f2faf5','#fcf5ff'].includes(b.paperColor)?b.paperColor:'#ffffff';
+ const kindLabel=b.kind==='writing'?'Luyện viết · XP':b.kind==='knowledge'?'Kiến thức':'Tự do';
+ return '<div class="nv-book-ui nv-book-writing write-screen">'
+  +'<div class="nv-book-top write-toolbar">'
+  +button('back','←','class="tool-btn nv-book-back" title="Quay lại thư viện" aria-label="Quay lại thư viện"')
+  +'<span class="nv-book-save write-save" id="nvBookStatus" role="status" aria-live="polite">✓ Đã lưu</span>'
+  +'<span class="nv-book-top-count" id="nvBookTopWords">'+totalWords.toLocaleString('vi-VN')+' chữ</span>'
+  +button('paper','◐','class="tool-btn" title="Đổi màu nền viết" aria-label="Đổi màu nền viết"')
+  +button('copy','⧉','class="tool-btn" title="Sao chép phần này" aria-label="Sao chép phần này"')
+  +'<details class="write-menu nv-book-menu"><summary class="tool-btn" aria-label="Tùy chọn quyển vở">⋮</summary>'
+  +'<div class="write-menu-panel">'
+  +'<div class="write-menu-heading">Quyển vở</div>'
+  +button('rename','✎ Sửa tên vở','class="btn secondary nv-book-menu-action"')
+  +button('add-part','+ Thêm phần mới','class="btn secondary nv-book-menu-action"')
+  +'<div class="write-menu-heading">Xuất nội dung</div>'
+  +button('export','⇩ Xuất TXT hoặc Markdown','class="btn outline nv-book-menu-action"')
+  +'<p class="hint">Mọi thay đổi được tự động lưu trên thiết bị.</p></div></details></div>'
+  +'<div class="nv-book-write-options">'
+  +'<select id="nvBookPart" aria-label="Chọn phần trong vở">'+b.parts.map(p=>'<option value="'+esc(p.id)+'"'+(p.id===s.id?' selected':'')+'>'+esc(p.title||'Không có tiêu đề')+'</option>').join('')+'</select>'
+  +'<div class="nv-book-modes" role="group" aria-label="Chế độ viết">'
+  +button('scroll','Cuộn',view==='scroll'?'class="active" aria-pressed="true"':'aria-pressed="false"')
+  +button('flip','Lật trang',view==='flip'?'class="active" aria-pressed="true"':'aria-pressed="false"')
+  +'</div></div>'
+  +'<div class="nv-book-paper-popover" id="nvBookPaperPanel" hidden><span>Nền trang viết</span>'
+  +['#ffffff','#fffdf7','#f6f8ff','#f2faf5','#fcf5ff'].map(c=>button('set-paper','<span class="nv-book-paper-swatch" style="--swatch:'+c+'"></span>','class="nv-book-paper-choice'+(paper===c?' active':'')+'" data-color="'+c+'" aria-label="Màu giấy '+c+'"')).join('')
+  +'</div>'
+  +'<div class="write-document nv-book-document" style="--paper:'+paper+'">'
+  +'<div class="write-info-strip">'
+  +'<textarea id="nvBookTitle" class="editor-title nv-book-title" rows="1" maxlength="120" spellcheck="false" aria-label="Tên quyển vở, chạm để sửa" placeholder="Tên quyển vở…">'+esc(b.title)+'</textarea>'
+  +'<div class="nv-book-info-chips"><span class="inline-chip">'+esc(kindLabel)+'</span><span class="inline-chip">✎ '+b.parts.length+' phần</span></div>'
+  +'<input id="nvBookPartTitle" class="nv-book-part-title" maxlength="120" aria-label="Tên phần hoặc chương" value="'+esc(s.title)+'" placeholder="Tên phần hoặc chương…">'
+  +'<div class="write-meta nv-book-write-meta"><span id="nvBookWords">'+totalWords.toLocaleString('vi-VN')+' chữ · Tự lưu</span><span>'+ (view==='flip'?'Lật trang':'Viết liên tục')+'</span></div>'
+  +'</div>'
+  +'<div id="nvBookBody" class="rich-editor nv-book-rich-editor'+(view==='flip'?' nv-book-flip-editor':'')+'" contenteditable="true" role="textbox" aria-multiline="true" spellcheck="true" aria-label="Nội dung phần trong quyển vở" data-placeholder="Bắt đầu viết nội dung…">'+notebookRich(s)+'</div>'
+  +'</div>'
+  +(view==='flip'?'<div class="nv-book-pager">'+button('prev','‹ Trang trước','disabled')+'<span id="nvBookPageCount">1 / 1</span>'+button('next','Trang sau ›','disabled')+'</div>':'')
+  +'<div class="nv-book-format-dock" role="toolbar" aria-label="Định dạng khi viết">'
+  +'<button type="button" data-nb-format="bold" title="In đậm" aria-label="In đậm"><b>B</b></button>'
+  +'<button type="button" data-nb-format="italic" title="In nghiêng" aria-label="In nghiêng"><i>I</i></button>'
+  +'<button type="button" data-nb-format="underline" title="Gạch chân" aria-label="Gạch chân"><u>U</u></button>'
+  +'<button type="button" data-nb-format="insertUnorderedList" title="Danh sách dấu chấm" aria-label="Danh sách dấu chấm">☷</button>'
+  +'<span class="nv-book-dock-spacer"></span>'
+  +'<button type="button" data-nb-format="undo" title="Hoàn tác" aria-label="Hoàn tác">↶</button>'
+  +'<button type="button" data-nb-format="redo" title="Làm lại" aria-label="Làm lại">↷</button>'
+  +'</div></div>';
 }
+
 function html(){if(!ready)return '<div class="nv-book-ui"><div class="card">Đang mở thư viện quyển vở…</div></div>';if(failed)return '<div class="nv-book-ui"><div class="card">⚠ '+esc(failed)+'. Chưa chỉnh sửa dữ liệu cũ.</div></div>';return selected?writer():catalog()}
 function openBook(id){chooserOpen=false;draftFlush();selected=id;const b=book();if(!b){selected=null;refresh();return}sectionId=b.lastPart||b.parts[0]?.id;page=0;baseText=section()?.text||'';refresh();window.scrollTo(0,0)}
 async function create(kind){
@@ -93,39 +153,93 @@ function bind(nav,rerender){navigate=nav;refresh=rerender;const rootEl=document.
  case 'active':showTrash=false;showArchived=false;refresh();return;
  case 'archive-list':showTrash=false;showArchived=true;refresh();return;
  case 'trash-list':showTrash=true;showArchived=false;refresh();return;
- case 'scroll':case 'flip':draftFlush();view=action;localStorage.setItem('nv-nb-mode',view);page=0;refresh();return;
- case 'prev':case 'next':draftFlush();page+=action==='next'?1:-1;refresh();return;
- case 'add-part':{draftFlush();const b=book(),name=prompt('Tên phần mới:','Phần '+(b.parts.length+1));if(name===null||!name.trim())return;const p={id:uid(),title:name.trim().slice(0,120),text:'',created_at:now(),updated_at:now()};b.parts.push(p);sectionId=p.id;b.lastPart=p.id;baseText='';page=0;save(b);refresh();return}
+ case 'scroll':case 'flip':draftFlush();root.nvBookResizeCleanup?.();view=action;localStorage.setItem('nv-nb-mode',view);page=0;refresh();return;
+ case 'prev':case 'next':{const body=rootEl.querySelector('#nvBookBody');if(!body)return;body.scrollBy({left:(action==='next'?1:-1)*body.clientWidth,behavior:'smooth'});return}
+ case 'add-part':{draftFlush();root.nvBookResizeCleanup?.();const b=book(),name=prompt('Tên phần mới:','Phần '+(b.parts.length+1));if(name===null||!name.trim())return;const p={id:uid(),title:name.trim().slice(0,120),text:'',created_at:now(),updated_at:now()};b.parts.push(p);sectionId=p.id;b.lastPart=p.id;baseText='';page=0;save(b);refresh();return}
  case 'export-all':exportAll();return;
  case 'import-all':document.querySelector('#nvBookImport')?.click();return;
- case 'export':{const b=book();if(!b)return;const type=confirm('Xuất dạng Markdown? Chọn Hủy để xuất TXT.')?'markdown':'txt';exportBook(b,type);return}
+ case 'export':{draftFlush();const b=book();if(!b)return;const type=confirm('Xuất dạng Markdown? Chọn Hủy để xuất TXT.')?'markdown':'txt';exportBook(b,type);return}
+ case 'rename':{const title=rootEl.querySelector('#nvBookTitle');title?.focus();title?.select();return}
+ case 'copy':{draftFlush();const b=book(),p=section();if(!b||!p)return;try{await navigator.clipboard.writeText(b.title+'\n\n'+p.title+'\n\n'+p.text);mark('✓ Đã sao chép')}catch{mark('Không thể sao chép')}return}
+ case 'paper':{const panel=rootEl.querySelector('#nvBookPaperPanel');if(panel)panel.hidden=!panel.hidden;return}
+ case 'set-paper':{const b=book(),paper=id||el.dataset.color;if(!b||!['#ffffff','#fffdf7','#f6f8ff','#f2faf5','#fcf5ff'].includes(paper))return;b.paperColor=paper;save(b);rootEl.querySelector('.nv-book-document')?.style.setProperty('--paper',paper);rootEl.querySelector('#nvBookPaperPanel').hidden=true;return}
  case 'menu':{const b=books.find(b=>b.id===id);if(!b)return;const choice=prompt('Tùy chọn: 1 Đổi tên · 2 Đổi màu · 3 Ghim/bỏ ghim · 4 Lưu trữ/khôi phục · 5 Nhân bản · 6 Chuyển vào thùng rác/khôi phục','1');if(!choice)return;switch(choice.trim()){case '1':{const n=prompt('Tên quyển vở',b.title);if(n&&n.trim())b.title=n.trim().slice(0,120);else return;break}case '2':b.cover=COLORS[(COLORS.indexOf(b.cover)+1)%COLORS.length];break;case '3':b.pinned=!b.pinned;break;case '4':b.archived=!b.archived;break;case '5':{const copy=structuredClone(b);copy.id=uid();copy.title=(b.title+' (bản sao)').slice(0,120);copy.created_at=now();copy.updated_at=now();copy.parts=copy.parts.map(s=>({...s,id:uid()}));copy.lastPart=copy.parts[0]?.id;books.push(copy);await persist(copy);refresh();return}case '6':if(!b.deleted&&!confirm('Chuyển quyển vở vào thùng rác? Có thể khôi phục sau.'))return;b.deleted=!b.deleted;break;default:return}save(b);refresh();return}
  }});
  rootEl.addEventListener('click',e=>{if(e.target.matches('.nv-book-choice-overlay')){chooserOpen=false;refresh()}});
  rootEl.querySelector('#nvBookSearch')?.addEventListener('input',e=>{filter=e.target.value;const pos=e.target.selectionStart;refresh();const newEl=document.querySelector('#nvBookSearch');if(newEl){newEl.focus();newEl.setSelectionRange(pos,pos)}});
  rootEl.querySelector('#nvBookImport')?.addEventListener('change',e=>handleImport(e.target.files?.[0]));
  const sel=rootEl.querySelector('#nvBookPart');sel?.addEventListener('change',e=>{draftFlush();sectionId=e.target.value;book().lastPart=sectionId;save(book());baseText=section()?.text||'';page=0;refresh()});
- rootEl.querySelector('#nvBookPartTitle')?.addEventListener('change',e=>{const b=book(),s=section();if(!b||!s)return;s.title=e.target.value.trim().slice(0,120)||'Không có tiêu đề';save(b)});
- const area=rootEl.querySelector('#nvBookBody');if(area){
-  if(view==='scroll'){area.style.height='auto';area.style.height=Math.max(area.scrollHeight,Math.floor(innerHeight*.67))+'px'}
-  area.addEventListener('compositionstart',()=>composing=true);
-  area.addEventListener('compositionend',()=>{composing=false;draftFlush()});
-  area.addEventListener('input',e=>{
-   const b=book(),s=section();if(!b||!s)return;
-   const before=s.text,insert=e.target.value;
-   s.text=view==='flip'?before.slice(0,pageSpan.start)+insert+before.slice(pageSpan.end):insert;
-   if(view==='flip')pageSpan.end=pageSpan.start+insert.length;
-   const paste=/insertFromPaste|insertFromDrop|historyUndo|historyRedo/i.test(e.inputType||'');
-   if(paste){if(b.kind==='writing'){root.nvNotebookActivity?.(b.id,s.id,baseText,s.text,false)}baseText=s.text}
-   s.updated_at=now();save(b);
-   const total=b.parts.reduce((n,p)=>n+words(p.text),0);
-   const w=document.querySelector('#nvBookWords');if(w)w.textContent=total.toLocaleString('vi-VN')+' chữ · '+b.parts.length+' phần';
-   if(view==='scroll'){area.style.height='auto';area.style.height=Math.max(area.scrollHeight,Math.floor(innerHeight*.67))+'px'}
-   else {const pg=pagesOf(s.text),next=rootEl.querySelector('[data-nb="next"]'),label=rootEl.querySelector('.nv-book-pager span');if(next)next.disabled=page>=pg.length-1;if(label)label.textContent=(page+1)+' / '+pg.length;}
-   if(!composing&&b.kind==='writing'&&!paste){clearTimeout(root.nvNotebookXPTimeout);root.nvNotebookXPTimeout=setTimeout(()=>{if(!composing){root.nvNotebookActivity?.(b.id,s.id,baseText,s.text,true);baseText=s.text}},600)}
-  });
-  area.addEventListener('blur',()=>{clearTimeout(root.nvNotebookXPTimeout);draftFlush()});
+ 
+
+ const title=rootEl.querySelector('#nvBookTitle');
+ if(title){
+  const resize=()=>{title.style.height='auto';title.style.height=Math.max(48,title.scrollHeight)+'px'};
+  resize();
+  title.addEventListener('input',()=>{const b=book();if(!b)return;const next=title.value.slice(0,120);b.title=next;save(b);resize()});
+  title.addEventListener('blur',()=>{const b=book();if(!b)return;if(!b.title.trim()){b.title='Quyển vở chưa đặt tên';title.value=b.title;save(b)}});
  }
+ rootEl.querySelector('#nvBookPartTitle')?.addEventListener('input',e=>{const b=book(),p=section();if(!b||!p)return;p.title=e.target.value.slice(0,120);save(b)});
+ const body=rootEl.querySelector('#nvBookBody');
+ if(body){
+  let pasteIntent=false;
+  const refreshCount=()=>{
+   const b=book();if(!b)return;
+   const countText=b.parts.reduce((n,p)=>n+words(p.text),0).toLocaleString('vi-VN')+' chữ';
+   const meter=rootEl.querySelector('#nvBookWords');if(meter)meter.textContent=countText+' · Tự lưu';
+   const top=rootEl.querySelector('#nvBookTopWords');if(top)top.textContent=countText;
+  };
+  const paging=()=>{
+   if(view!=='flip')return;
+   const width=body.clientWidth||1;
+   const total=Math.max(1,Math.round(body.scrollWidth/width));
+   page=Math.max(0,Math.min(total-1,Math.round(body.scrollLeft/width)));
+   const prev=rootEl.querySelector('[data-nb="prev"]'),next=rootEl.querySelector('[data-nb="next"]'),txt=rootEl.querySelector('#nvBookPageCount');
+   if(prev)prev.disabled=page<=0;
+   if(next)next.disabled=page>=total-1;
+   if(txt)txt.textContent=(page+1)+' / '+total;
+  };
+  const record=e=>{
+   const b=book(),p=section();if(!b||!p)return;
+   const plain=body.innerText.replace(/\u00a0/g,' ').replace(/\r\n?/g,'\n');
+   const previous=p.text;
+   p.text=plain;p.richHtml=sanitizeNotebookRich(body.innerHTML);p.updated_at=now();
+   const excluded=pasteIntent||/insertFromPaste|insertFromDrop|historyUndo|historyRedo/i.test(e.inputType||'');
+   pasteIntent=false;
+   if(excluded){if(b.kind==='writing')root.nvNotebookActivity?.(b.id,p.id,baseText,p.text,false);baseText=p.text}
+   save(b);refreshCount();
+   if(!composing&&b.kind==='writing'&&!excluded&&plain!==previous){
+    clearTimeout(root.nvNotebookXPTimeout);
+    root.nvNotebookXPTimeout=setTimeout(()=>{
+     if(composing)return;
+     root.nvNotebookActivity?.(b.id,p.id,baseText,p.text,true);
+     baseText=p.text;
+    },600);
+   }
+   if(view==='flip')requestAnimationFrame(paging);
+  };
+  body.addEventListener('compositionstart',()=>{composing=true});
+  body.addEventListener('compositionend',()=>{composing=false;record({inputType:'insertCompositionText'})});
+  body.addEventListener('paste',e=>{
+   e.preventDefault();
+   pasteIntent=true;
+   document.execCommand('insertText',false,e.clipboardData.getData('text/plain'));
+  });
+  body.addEventListener('drop',e=>{e.preventDefault()});
+  body.addEventListener('input',record);
+  body.addEventListener('blur',()=>{clearTimeout(root.nvNotebookXPTimeout);draftFlush()});
+  rootEl.querySelectorAll('[data-nb-format]').forEach(btn=>{
+   btn.addEventListener('pointerdown',e=>e.preventDefault());
+   btn.addEventListener('click',()=>{
+    body.focus({preventScroll:true});
+    document.execCommand(btn.dataset.nbFormat,false,null);
+    record({inputType:'format'});
+   });
+  });
+  body.addEventListener('scroll',paging,{passive:true});
+  requestAnimationFrame(paging);
+  if('ResizeObserver'in root){const observer=new ResizeObserver(paging);observer.observe(body);root.nvBookResizeCleanup?.();root.nvBookResizeCleanup=()=>observer.disconnect()}
+ }
+
 }
 function isEditing(){return !!selected}
 function wordCount(){return books.filter(b=>!b.deleted&&!b.archived).reduce((n,b)=>n+(b.parts||[]).reduce((m,p)=>m+words(p.text),0),0)}
