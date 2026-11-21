@@ -65,7 +65,9 @@ jobs:
           npm install --no-save --no-package-lock --ignore-scripts playwright@1.56.1
           npx playwright install --with-deps chromium
       - name: Verify real Chromium UI and shadow recovery
-        run: node tests/e2e/write-smoke.e2e.cjs
+        run: |
+          node tests/e2e/write-smoke.e2e.cjs
+          node tests/e2e/notebooks.e2e.cjs
       - name: Verify two-tab and fake cloud synchronization
         run: |
           node tests/serve-with-headers.cjs . 8010 >/tmp/write-e2e-server.log 2>&1 &
