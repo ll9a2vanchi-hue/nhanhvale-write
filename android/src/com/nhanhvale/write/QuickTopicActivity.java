@@ -2,16 +2,22 @@ package com.nhanhvale.write;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.text.InputFilter;
-import android.text.InputType;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.util.Base64;
+import android.view.Gravity;
 import android.view.KeyEvent;
+import android.view.View;
+import android.view.ViewTreeObserver;
+import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -27,6 +33,7 @@ public final class QuickTopicActivity extends Activity {
     private static final int BASE64_FLAGS = Base64.URL_SAFE | Base64.NO_WRAP | Base64.NO_PADDING;
     private boolean opening;
     private EditText title;
+    private Dialog entryDialog;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -53,14 +60,24 @@ public final class QuickTopicActivity extends Activity {
             .show();
     }
 
+    @SuppressWarnings("deprecation")
     private void showEntry(Bundle state) {
-        title = new EditText(this);
-        title.setHint("Tên chủ đề");
-        title.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
-        title.setSingleLine(true);
-        title.setImeOptions(EditorInfo.IME_ACTION_DONE);
-        title.setFilters(new InputFilter[] {new InputFilter.LengthFilter(240)});
-        if (state != null) title.setText(state.getString("title", ""));
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+        getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        Dialog dialog = new Dialog(this);
+        entryDialog = dialog;
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        View entry = getLayoutInflater().inflate(R.layout.quick_topic_entry, null);
+        dialog.setContentView(entry);
+        dialog.setOnCancelListener(view -> finish());
+        entry.findViewById(R.id.close_topic_entry).setOnClickListener(view -> finish());
+        entry.findViewById(R.id.save_topic_entry).setOnClickListener(view -> submit());
+
+        title = entry.findViewById(R.id.topic_entry_title);
+        if (state != null) {
+            title.setText(state.getString("title", ""));
+            title.setSelection(title.length());
+        }
         title.setOnEditorActionListener((view, action, event) -> {
             if (event != null && (event.getKeyCode() == KeyEvent.KEYCODE_ENTER
                     || event.getKeyCode() == KeyEvent.KEYCODE_NUMPAD_ENTER)) {
@@ -72,23 +89,38 @@ public final class QuickTopicActivity extends Activity {
             return true;
         });
 
-        AlertDialog dialog = new AlertDialog.Builder(this)
-            .setTitle("Thêm nhanh chủ đề")
-            .setView(title)
-            .setNegativeButton("Hủy", (view, which) -> finish())
-            .setPositiveButton("Lưu", null)
-            .setOnCancelListener(view -> finish())
-            .create();
-        dialog.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+        Window window = dialog.getWindow();
+        window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        window.setGravity(Gravity.BOTTOM);
+        window.setDimAmount(0.24f);
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+            | WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
         title.requestFocus();
+        title.getViewTreeObserver().addOnWindowFocusChangeListener(new ViewTreeObserver.OnWindowFocusChangeListener() {
+            @Override
+            public void onWindowFocusChanged(boolean hasFocus) {
+                if (!hasFocus) return;
+                title.getViewTreeObserver().removeOnWindowFocusChangeListener(this);
+                title.post(() -> getSystemService(InputMethodManager.class)
+                    .showSoftInput(title, InputMethodManager.SHOW_IMPLICIT));
+            }
+        });
         dialog.show();
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> submit());
+        int maxWidth = Math.round(480 * getResources().getDisplayMetrics().density);
+        int screenWidth = getResources().getDisplayMetrics().widthPixels;
+        window.setLayout(Math.min(screenWidth, maxWidth), WindowManager.LayoutParams.WRAP_CONTENT);
     }
 
     @Override
     protected void onSaveInstanceState(Bundle state) {
         super.onSaveInstanceState(state);
         if (title != null) state.putString("title", title.getText().toString());
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (entryDialog != null) entryDialog.dismiss();
+        super.onDestroy();
     }
 
     private void submit() {

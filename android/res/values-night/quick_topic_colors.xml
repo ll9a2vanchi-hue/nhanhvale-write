@@ -1,0 +1,10 @@
+<resources>
+    <color name="topic_surface">#182235</color>
+    <color name="topic_text">#F1F5F9</color>
+    <color name="topic_secondary">#CBD5E1</color>
+    <color name="topic_input">#101827</color>
+    <color name="topic_border">#64748B</color>
+    <color name="topic_primary">#BFDBFE</color>
+    <color name="topic_on_primary">#172554</color>
+    <color name="topic_active">#93C5FD</color>
+</resources>
