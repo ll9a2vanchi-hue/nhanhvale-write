@@ -127,7 +127,14 @@ initXP();
 const activity=(before,after)=>{const delta=Math.max(0,count(after)-count(before));if(delta){const d=today();db.logs[d]=(db.logs[d]||0)+delta}};
 const autoStatus=t=>t.status==='done'?'done':count(t.content)>50?'draft':'todo';const put=(t,patch)=>{const before=t.content||'';if('content'in patch&&autoStatus(t)!=='done')patch.status=count(patch.content)>50?'draft':'todo';if('content'in patch&&patch.content!==before)patch.last_written=new Date().toISOString();Object.assign(t,patch,{updated_at:new Date().toISOString()});if('content'in patch)activity(before,patch.content);queue(t);save()};
 function queue(t){db.syncQueue=db.syncQueue.filter(x=>x.id!==t.id);db.syncQueue.push({id:t.id,updated_at:t.updated_at});}
-function add(title,tag='Chưa phân loại',priority='unclassified'){const t={id:uid(),title,tag,priority,status:'todo',rating:null,content:'',pinned:false,created_at:new Date().toISOString(),updated_at:new Date().toISOString(),completed_at:null,last_reviewed:null,last_written:null,review_count:0,deleted:false};db.topics.unshift(t);queue(t);save();return t}
+function add(title,tag='Chưa phân loại',priority='unclassified',widgetId=null){const t={id:widgetId||uid(),title,tag,priority,status:'todo',rating:null,content:'',pinned:false,created_at:new Date().toISOString(),updated_at:new Date().toISOString(),completed_at:null,last_reviewed:null,last_written:null,review_count:0,deleted:false};db.topics.unshift(t);queue(t);const saved=save();
+ if(widgetId&&!saved){
+  db.topics=db.topics.filter(topic=>topic.id!==widgetId);
+  db.syncQueue=db.syncQueue.filter(item=>item.id!==widgetId);
+  return null;
+ }
+ return t;
+}
 // Deterministic shield balance: derived from synced daily logs without a new cloud table.
 // Every 7 consecutive qualifying writing days grants 1 shield (up to 2).
 // A missed *finished* day uses 1 shield to protect the writing streak, never to earn a shield.
@@ -664,3 +671,65 @@ $('#tabs').onclick=e=>{
 $('#settingsBtn').onclick=()=>{if(tab!=='settings'&&tab!=='account')window.nvPreviousTab=tab;tab='settings';current=null;render();window.scrollTo(0,0)};$('#accountBtn').onclick=()=>{tab='account';current=null;render()};window.addEventListener('online',()=>{networkStatus('● Đã có mạng · Đang kiểm tra đồng bộ');sync()});window.addEventListener('offline',()=>{nvXPFinishStartup(null);networkStatus()});document.addEventListener('visibilitychange',()=>{if(!document.hidden){if(tab==='awards')render();else renderMetrics();if(navigator.onLine)sync()}});setInterval(()=>{if(navigator.onLine&&window.nvHasPending())sync()},30000);if('serviceWorker'in navigator && location.protocol==='https:')navigator.serviceWorker.register('./sw.js').catch(console.warn);render();networkStatus();if(db.settings.supabaseUrl&&navigator.onLine)sync();
 
 
+
+const nvWidgetKey='nv-write-widget-key';
+function nvWidgetBytes(value){
+ const binary=atob(value.replace(/-/g,'+').replace(/_/g,'/'));
+ return Uint8Array.from(binary,character=>character.charCodeAt(0));
+}
+
+async function nvHandleWidget(){
+ const fragment=location.hash;
+ if(!fragment.startsWith('#write-widget'))return;
+ const clearFragment=()=>{
+  if(location.hash===fragment)history.replaceState(history.state,'',location.pathname+location.search);
+ };
+ const link=fragment.match(/^#write-widget-link=([A-Za-z0-9_-]{43})$/);
+ if(link){
+  clearFragment();
+  if(!window.confirm('Liên kết widget Android với Write trong trình duyệt này?'))return;
+  try{
+   localStorage.setItem(nvWidgetKey,link[1]);
+   networkStatus('✓ Đã liên kết widget Write');
+  }catch{
+   alert('Không lưu được liên kết widget trong trình duyệt.');
+  }
+  return;
+ }
+
+ const request=fragment.match(/^#write-widget=(([a-f0-9-]{36})\.(\d{13})\.([A-Za-z0-9_-]{1,1000}))\.([A-Za-z0-9_-]{43})$/);
+ if(!request){clearFragment();return}
+ const [,payload,id,timestamp,encodedTitle,signature]=request;
+ try{
+  const secret=localStorage.getItem(nvWidgetKey);
+  if(!secret)throw Error('Mở ứng dụng Write Android và chọn Liên kết widget một lần.');
+  const key=await crypto.subtle.importKey('raw',nvWidgetBytes(secret),{name:'HMAC',hash:'SHA-256'},false,['verify']);
+  const verified=await crypto.subtle.verify('HMAC',key,nvWidgetBytes(signature),new TextEncoder().encode(payload));
+  if(!verified||Math.abs(Date.now()-Number(timestamp))>10*60*1000)
+   throw Error('Yêu cầu đã hết hạn hoặc widget chưa được liên kết. Hãy thử lại từ widget.');
+  const title=new TextDecoder('utf-8',{fatal:true}).decode(nvWidgetBytes(encodedTitle)).trim();
+  if(!title||title.length>240)throw Error('Tên chủ đề phải có từ 1 đến 240 ký tự.');
+  const persist=()=>{
+   window.nvMergeDisk?.();
+   nvSaveBeforeBack();
+   if(!db.topics.some(topic=>topic.id===id)&&!add(title,'Chưa phân loại','unclassified',id))
+    throw Error('Không thể lưu chủ đề trong trình duyệt.');
+   if(location.hash!==fragment)return;
+   clearFragment();
+   tab='topics';
+   filter='all';
+   query='';
+   current=null;
+   render();
+   networkStatus('✓ Đã lưu chủ đề');
+   if(navigator.onLine)sync();
+  };
+  if(navigator.locks)await navigator.locks.request('nv-write-widget',persist);
+  else persist();
+ }catch(error){
+  clearFragment();
+  if(location.hash==='')alert(error.message);
+ }
+}
+window.addEventListener('hashchange',nvHandleWidget);
+nvHandleWidget();
