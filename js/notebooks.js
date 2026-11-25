@@ -236,7 +236,8 @@ function writer(){
   +'<div class="write-menu-heading">'+esc(kindLabel)+' · '+b.parts.length+' phần</div>'
   +button('rename','✎ Sửa tên vở','class="btn secondary nv-book-menu-action"')
   +'<div class="write-menu-heading">Xuất nội dung</div>'
-  +button('export','⇩ Xuất TXT hoặc Markdown','class="btn outline nv-book-menu-action"')
+  +button('export','⇩ Xuất vở này (.txt)','class="btn outline nv-book-menu-action"')
+  +button('export-md','Xuất Markdown','class="btn outline nv-book-menu-action"')
   +'<p class="hint">Mọi thay đổi được tự động lưu trên thiết bị.</p></div></details></div>'
   +'<div class="nv-book-write-options">'
   +button('contents','Mục lục','class="nv-book-outline" aria-haspopup="dialog" aria-controls="nvBookContents"')
@@ -307,7 +308,7 @@ async function create(kind,title){
  finally{creating=false}
 }
 function download(name,data,mime){const u=URL.createObjectURL(new Blob([data],{type:mime}));const a=document.createElement('a');a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1500)}
-function exportBook(b,kind){const body=b.parts.map((s,i)=> (kind==='markdown'?'# '+s.title:'['+(i+1)+'] '+s.title)+'\n\n'+s.text).join('\n\n---\n\n');download(short(b.title)+(kind==='markdown'?'.md':'.txt'),(kind==='markdown'?'':'\uFEFF'+b.title+'\n\n')+body,kind==='markdown'?'text/markdown;charset=utf-8':'text/plain;charset=utf-8')}
+function exportBook(b,kind){const body=b.parts.map((s,i)=> (kind==='markdown'?'# '+s.title:'['+(i+1)+'] '+s.title)+'\n\n'+s.text).join('\n\n---\n\n');download(short(b.title)+(kind==='txt'?' - '+new Date().toLocaleDateString('sv-SE'):'')+(kind==='markdown'?'.md':'.txt'),(kind==='markdown'?'':'\uFEFF'+b.title+'\n\n')+body,kind==='markdown'?'text/markdown;charset=utf-8':'text/plain;charset=utf-8')}
 function exportAll(){draftFlush();download('nhanhvale-write-quyen-vo-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify({type:'nhanhvale-notebooks',version:1,books:exportData()},null,2),'application/json')}
 function exportData(){return ready&&!failed?books.map(b=>structuredClone(b)):undefined}
 async function importData(input){if(!Array.isArray(input))return 0;if(!db)throw Error('Bộ nhớ quyển vở chưa sẵn sàng');if(input.length>10000)throw Error('Quá nhiều quyển vở');let added=0;for(const x of input){if(!x||typeof x!=='object'||typeof x.id!=='string'||!Array.isArray(x.parts)||!x.parts.length||x.parts.length>10000||typeof x.title!=='string'||x.parts.some(p=>!p||typeof p.text!=='string'||typeof p.id!=='string'||typeof p.title!=='string'||p.text.length>2000000))throw Error('Bản sao lưu quyển vở không hợp lệ');const old=books.find(b=>b.id===x.id);if(old&&JSON.stringify(old)===JSON.stringify(x))continue;const b=structuredClone(x);if(old){b.id=uid();b.title=(b.title+' (bản nhập)').slice(0,120)}b.cover=COLORS.includes(b.cover)?b.cover:COLORS[0];b.created_at=b.created_at||now();b.updated_at=now();b.parts=b.parts.map(p=>({...p,id:p.id||uid()}));books.push(b);await put(b);added++}if(added){channel?.postMessage({reload:true});if(!selected)refresh()}return added}
@@ -488,7 +489,7 @@ function bind(rerender){refresh=rerender;const rootEl=document.querySelector('.n
  case 'retry-save':save(book(),{touch:false});return;
  case 'export-all':exportAll();return;
  case 'import-all':document.querySelector('#nvBookImport')?.click();return;
- case 'export':{draftFlush();const b=book();if(!b)return;const type=confirm('Xuất dạng Markdown? Chọn Hủy để xuất TXT.')?'markdown':'txt';exportBook(b,type);return}
+ case 'export':case 'export-md':{draftFlush();const b=book();if(!b)return;const type=action==='export-md'?'markdown':'txt';exportBook(b,type);return}
  case 'rename':{el.closest('details')?.removeAttribute('open');const title=rootEl.querySelector('#nvBookTitle');title?.focus();title?.select();return}
  case 'copy':{
   const b=book(),p=section();
@@ -812,6 +813,6 @@ async function syncBooks(client,userId){
  updateSyncLabel(waiting?'Còn thay đổi chờ đồng bộ.':'✓ Đã đồng bộ quyển vở');
 }
 
-root.nvNotebookUI={bookCount:async()=>{await bookLoad;return db&&!failed?(await getAll()).length:0;},syncBooks,updateSyncLabel,needsSync:()=>syncGeneration!==lastSyncedGeneration,html,bind,isEditing,flush:draftFlush,exportData,importData,wordCount,continueHTML,resume,cleanup,restoreBook,editorId:()=>selected};
+root.nvNotebookUI={get whenReady(){return bookLoad;},bookCount:async()=>{await bookLoad;return db&&!failed?(await getAll()).length:0;},syncBooks,updateSyncLabel,needsSync:()=>syncGeneration!==lastSyncedGeneration,html,bind,isEditing,flush:draftFlush,exportData,importData,wordCount,continueHTML,resume,cleanup,restoreBook,editorId:()=>selected};
 const bookLoad=load();
 })(window);
