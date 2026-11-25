@@ -29,12 +29,14 @@ const words=s=>(String(s||'').trim().match(/\S+/gu)||[]).length;
 const short=s=>String(s||'').replace(/[\\/:*?"<>|\u0000-\u001f]/g,'-').slice(0,70)||'quyen-vo';
 let db=null,books=[],ready=false,failed='',selected=null,sectionId=null,page=0,filter='',showArchived=false,showTrash=false;
 let chooserOpen=false,creating=false;
+let syncGeneration=0,lastSyncedGeneration=-1;
+let syncMessage='Đăng nhập để đồng bộ vở giữa các thiết bị.';
 const pending=new Map();
 let view=localStorage.getItem('nv-nb-mode')==='flip'?'flip':'scroll',refresh=()=>{},baseText='',composing=false;
 const button=(action,label,extra='')=>'<button type="button" data-nb="'+action+'" '+extra+'>'+label+'</button>';
 function openDB(){return new Promise((res,rej)=>{if(!root.indexedDB)return rej(Error('Trình duyệt không hỗ trợ IndexedDB'));const req=indexedDB.open(NAME,1);req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains(STORE))req.result.createObjectStore(STORE,{keyPath:'id'})};req.onsuccess=()=>res(req.result);req.onerror=()=>rej(req.error||Error('Không mở được dữ liệu quyển vở'));req.onblocked=()=>rej(Error('Hãy đóng các tab Write khác và thử tải lại'))})}
 function getAll(){return new Promise((res,rej)=>{const t=db.transaction(STORE,'readonly'),r=t.objectStore(STORE).getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error)})}
-function put(b){return new Promise((res,rej)=>{const t=db.transaction(STORE,'readwrite');t.objectStore(STORE).put(structuredClone(b));t.oncomplete=()=>res();t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)})}
+function put(b){return new Promise((res,rej)=>{const t=db.transaction(STORE,'readwrite');t.objectStore(STORE).put(structuredClone(b));t.oncomplete=()=>{syncGeneration++;res();};t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)})}
 let channel=null;try{channel=new BroadcastChannel('nv-write-notebooks')}catch{}
 async function load(){try{db=await openDB();books=await getAll();ready=true;failed='';if(document.querySelector('.nv-book-ui'))refresh();renderContinue()}catch(e){failed=e.message||String(e);ready=true;if(document.querySelector('.nv-book-ui'))refresh()}}
 function saveStatus(b){
@@ -163,7 +165,7 @@ function catalog(){
   button('archive-list','Lưu trữ','aria-pressed="'+(showArchived&&!showTrash)+'"')+
   button('trash-list','Thùng rác','aria-pressed="'+showTrash+'"')+'</div></div>'+
   '<div class="nv-book-grid" id="nvBookResults">'+notebookCovers()+'</div>'+newBookChooser()+
-  '<div class="nv-book-help"><span>Vở được lưu trên thiết bị này.</span>'+button('export-all','Sao lưu vở','class="nv-book-link"')+
+  '<div class="nv-book-help"><span id="nvBookCloudStatus" role="status">'+esc(syncMessage)+'</span>'+button('export-all','Sao lưu vở','class="nv-book-link"')+
   button('import-all','Nhập bản sao lưu','class="nv-book-link"')+
   '<input hidden type="file" id="nvBookImport" accept=".json,application/json"></div></div>';
 }
@@ -705,6 +707,111 @@ document.addEventListener('keydown',e=>{if(!chooserOpen)return;if(e.key==='Escap
 document.addEventListener('click',e=>{if(chooserOpen&&e.target.closest('#tabs [data-tab],#settingsBtn,#accountBtn'))chooserOpen=false},true);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)draftFlush()});
 root.addEventListener('pagehide',()=>draftFlush());
-root.nvNotebookUI={html,bind,isEditing,flush:draftFlush,exportData,importData,wordCount,continueHTML,resume,cleanup,restoreBook,editorId:()=>selected};
-load();
+
+const revisionKey=id=>'nv-write-notebook-revision:'+id;
+function canonical(value){
+ if(Array.isArray(value))return value.map(canonical);
+ if(value&&typeof value==='object'){
+  return Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])]));
+ }
+ return value;
+}
+async function revision(book){
+ const {lastPart,...content}=book;
+ const bytes=new TextEncoder().encode(JSON.stringify(canonical(content)));
+ const hash=await root.crypto.subtle.digest('SHA-256',bytes);
+ return Array.from(new Uint8Array(hash),byte=>byte.toString(16).padStart(2,'0')).join('');
+}
+function updateSyncLabel(message){
+ syncMessage=message;
+ const label=document.querySelector('#nvBookCloudStatus');
+ if(label)label.textContent=message;
+}
+function applyCloudBook(expected,remote,copy){
+ return new Promise((resolve,reject)=>{
+  const transaction=db.transaction(STORE,'readwrite');
+  const store=transaction.objectStore(STORE);
+  const request=store.get(remote.id);
+  let applied=false;
+  request.onsuccess=()=>{
+   if(selected===remote.id||pending.has(remote.id)||
+      JSON.stringify(request.result)!==JSON.stringify(expected))return;
+   if(copy)store.put(copy);
+   store.put(remote);
+   applied=true;
+  };
+  transaction.oncomplete=()=>resolve(applied);
+  transaction.onabort=()=>reject(transaction.error);
+ });
+}
+async function syncBooks(client,userId){
+ await bookLoad;
+ if(!db||failed)throw Error(failed||'Bộ nhớ quyển vở chưa sẵn sàng');
+ const localBooks=new Map((await getAll()).map(book=>[book.id,book]));
+ const remoteBooks=new Map();
+ const table=()=>client.from('write_notebooks');
+ for(let offset=0;;offset+=100){
+  const {data,error}=await table().select('id,revision,book').eq('user_id',userId)
+   .order('id').range(offset,offset+99);
+  if(error)throw error;
+  for(const row of data)remoteBooks.set(row.id,row);
+  if(data.length<100)break;
+ }
+ let changed=false,waiting=false;
+ const generation=syncGeneration;
+ for(const id of new Set([...localBooks.keys(),...remoteBooks.keys()])){
+  if(pending.has(id)){waiting=true;continue;}
+  const local=localBooks.get(id),remote=remoteBooks.get(id);
+  const key=revisionKey(id);
+  const base=localStorage.getItem(key);
+  const localRevision=local?await revision(local):null;
+  if(remote&&remote.revision===localRevision){
+   localStorage.setItem(key,localRevision);
+   continue;
+  }
+  if(local&&(!remote||remote.revision===base)){
+   const value={user_id:userId,id,revision:localRevision,book:local};
+   const request=remote
+    ?table().update(value).eq('user_id',userId).eq('id',id).eq('revision',base)
+    :table().upsert(value,{onConflict:'user_id,id',ignoreDuplicates:true});
+   const {data,error}=await request.select('revision');
+   if(error)throw error;
+   if(data.length)localStorage.setItem(key,localRevision);
+   else waiting=true;
+   continue;
+  }
+  if(selected===id){waiting=true;continue;}
+  const incoming={...remote.book};
+  if(local?.lastPart&&incoming.parts.some(part=>part.id===local.lastPart)){
+   incoming.lastPart=local.lastPart;
+  }
+  const suffix=' (bản xung đột)';
+  const copy=local&&localRevision!==base
+   ?{...local,id:uid(),title:local.title.slice(0,120-suffix.length)+suffix,
+     deleted:false,archived:false}
+   :null;
+  if(await applyCloudBook(local,incoming,copy)){
+   const index=books.findIndex(book=>book.id===id);
+   if(!pending.has(id)&&selected!==id){
+    if(index<0)books.push(incoming);
+    else books[index]=incoming;
+   }
+   if(copy&&!books.some(book=>book.id===copy.id))books.push(copy);
+   localStorage.setItem(key,remote.revision);
+   changed=true;
+   if(copy)waiting=true;
+  }else waiting=true;
+ }
+ if(changed){
+  channel?.postMessage({reload:true});
+  if(!selected&&!chooserOpen&&document.querySelector('.nv-book-ui'))refresh();
+  renderContinue();
+ }
+ if(waiting&&generation===syncGeneration)syncGeneration++;
+ if(!waiting)lastSyncedGeneration=generation;
+ updateSyncLabel(waiting?'Còn thay đổi chờ đồng bộ.':'✓ Đã đồng bộ quyển vở');
+}
+
+root.nvNotebookUI={bookCount:async()=>{await bookLoad;return db&&!failed?(await getAll()).length:0;},syncBooks,updateSyncLabel,needsSync:()=>syncGeneration!==lastSyncedGeneration,html,bind,isEditing,flush:draftFlush,exportData,importData,wordCount,continueHTML,resume,cleanup,restoreBook,editorId:()=>selected};
+const bookLoad=load();
 })(window);
